@@ -1,73 +1,96 @@
-import Hero from '../components/Hero';
-import Pricing from '../components/Pricing';
-import Reveal from '../components/Reveal';
-import { CheckCircle } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Play, CheckCircle } from 'lucide-react';
+
+const pageTransition = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+  transition: { duration: 0.4 }
+};
 
 export default function Home() {
   return (
-    <>
-      <Hero />
+    <motion.div variants={pageTransition} initial="initial" animate="animate" exit="exit">
       
-      {/* Section Preuve Sociale / Chiffres */}
-      <section className="py-12 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-                { label: 'Fans générés', val: '+50k' },
-                { label: 'Artistes accompagnés', val: '120+' },
-                { label: 'Campagnes Ads', val: '500+' },
-                { label: 'Taux de satisfaction', val: '98%' },
-            ].map((stat, i) => (
-                <div key={i}>
-                    <div className="text-4xl font-extrabold text-primary mb-1">{stat.val}</div>
-                    <div className="text-gray-500 font-medium uppercase text-sm tracking-wide">{stat.label}</div>
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-32 overflow-hidden bg-slate-900">
+        {/* Background Image avec Overlay */}
+        <div className="absolute inset-0 z-0">
+             <img 
+               src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=2070&auto=format&fit=crop" 
+               className="w-full h-full object-cover opacity-40" 
+               alt="Studio vibe"
+             />
+             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center md:text-left pt-20">
+            <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+            >
+                <span className="inline-block py-1 px-3 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-sm font-bold mb-6">
+                    🚀 Plateforme de Visibilité Hybride
+                </span>
+                <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6">
+                    Révélez votre <br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Potentiel.</span>
+                </h1>
+                <p className="text-lg text-slate-300 max-w-xl mb-8 leading-relaxed">
+                    Level Boost accompagne les artistes et entrepreneurs. De la création de contenu à la stratégie d'acquisition, transformez votre talent en empire.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <Link to="/pricing" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center transition-all shadow-lg shadow-indigo-500/25">
+                        Voir les Packs <ArrowRight className="ml-2 w-5 h-5" />
+                    </Link>
+                    <Link to="/challenges" className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-xl font-bold flex items-center justify-center transition-all">
+                        Concours en cours
+                    </Link>
                 </div>
-            ))}
+            </motion.div>
         </div>
       </section>
 
-      {/* Section Valeurs / Vision */}
-<section className="py-20 bg-white">
-  <div className="max-w-7xl mx-auto px-4">
-    <div className="grid md:grid-cols-2 gap-12 items-center">
-      <Reveal>
-        <div className="relative">
-            {/* Décoration */}
-            <div className="absolute -top-4 -left-4 w-24 h-24 bg-secondary/10 rounded-full blur-xl"></div>
-            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800" alt="Team" className="rounded-2xl shadow-2xl relative z-10" />
-            {/* Badge flottant */}
-            <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-xl shadow-xl z-20 border-l-4 border-secondary max-w-xs hidden md:block">
-                <p className="font-bold text-primary">"Notre mission : transformer la notoriété en revenus concrets."</p>
-            </div>
-        </div>
-      </Reveal>
-      
-      <Reveal delay={0.2}>
-        <h2 className="text-4xl font-display font-bold text-primary mb-6">Plus qu'une agence, <br/>un écosystème.</h2>
-        <div className="space-y-6">
-            {[
-                { title: "Authenticité", desc: "Pas de faux followers. Du contenu humain et du storytelling vrai." },
-                { title: "Performance", desc: "Des KPIs mesurables. On ne cherche pas juste des likes, mais des clients." },
-                { title: "Communauté", desc: "Un réseau solide d'artistes, d'entrepreneurs et d'investisseurs." }
-            ].map((val, i) => (
-                <div key={i} className="flex">
-                    <div className="flex-shrink-0 mt-1">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-primary font-bold">
-                            {i + 1}
-                        </div>
-                    </div>
-                    <div className="ml-4">
-                        <h4 className="text-xl font-bold text-gray-900">{val.title}</h4>
-                        <p className="text-gray-600">{val.desc}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-      </Reveal>
-    </div>
-  </div>
-</section>
+      {/* Social Proof */}
+      <div className="bg-white py-10 border-b border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Ils nous font confiance</p>
+              <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale">
+                  {/* Logos fictifs */}
+                  <div className="text-2xl font-black text-slate-800">TRACE</div>
+                  <div className="text-2xl font-bold text-slate-800 font-serif">VOGUE</div>
+                  <div className="text-2xl font-bold text-slate-800 italic">Spotify</div>
+              </div>
+          </div>
+      </div>
 
-      <Pricing />
-    </>
+      {/* Value Proposition Section */}
+      <section className="py-24 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-center">
+              <div>
+                  <h2 className="text-3xl font-bold text-slate-900 mb-6">Plus qu'une agence,<br/>un accélérateur de carrière.</h2>
+                  <p className="text-slate-600 mb-8 leading-relaxed">
+                      Contrairement aux agences classiques, nous ne vendons pas que des "likes". Nous construisons une stratégie durable basée sur la data et la conversion[cite: 3, 31].
+                  </p>
+                  <ul className="space-y-4">
+                      {['Studio de production intégré', 'Réseau de partenaires & labels', 'Campagnes Ads Data-driven'].map((item, i) => (
+                          <li key={i} className="flex items-center text-slate-700 font-medium">
+                              <CheckCircle className="w-5 h-5 text-indigo-600 mr-3" /> {item}
+                          </li>
+                      ))}
+                  </ul>
+              </div>
+              <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl opacity-20 blur-lg"></div>
+                  <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&q=80" alt="Artist working" className="relative rounded-2xl shadow-2xl" />
+              </div>
+          </div>
+      </section>
+
+    </motion.div>
   );
 }
