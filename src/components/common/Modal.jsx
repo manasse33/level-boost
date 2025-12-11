@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useInView, useAnimation } from 'framer-motion'
 import { 
   X, ChevronRight, AlertCircle, CheckCircle, 
   Eye, Loader, Menu 
-} from
+} from 'lucide-react'
 export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   if (!isOpen) return null;
 

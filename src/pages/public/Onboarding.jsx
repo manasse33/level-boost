@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronRight, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
-import { PACKS } from '../data/content'; // Assurez-vous d'importer vos données
+import { PACKS } from '../../data/content'; // Assurez-vous d'importer vos données
 
 export default function Onboarding() {
     const navigate = useNavigate();

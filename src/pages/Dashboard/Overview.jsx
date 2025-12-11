@@ -1,6 +1,3 @@
-// ============= DASHBOARD PAGES =============
-// Pages du dashboard client
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,7 +9,7 @@ import {
   ProfileCard, OrderCard, SubscriptionCard, PostCard,
   CampaignCard, EmptyState, ProfileForm, OrderForm,
   PostForm, CampaignForm, ActivityFeed, QuickActions
-} from '../components';
+} from '../../components';
 
 // ============= DASHBOARD OVERVIEW =============
 export const DashboardOverview = ({ user, onNavigate, apiRequest }) => {

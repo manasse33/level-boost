@@ -1,4 +1,10 @@
 // ============= LOGIN PAGE =============
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Input, Button, Toast } from '../../components/common'; // adapte selon ton arborescence
+import { AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 export const LoginPage = ({ onNavigate, onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,12 +89,13 @@ export const LoginPage = ({ onNavigate, onLogin }) => {
 
         <p className="mt-6 text-center text-sm text-slate-600">
           Pas encore de compte ?{' '}
-          <button
-            onClick={() => onNavigate('/register')}
-            className="text-indigo-600 font-bold hover:underline"
-          >
-            S'inscrire gratuitement
-          </button>
+           <Link
+    to="/login"
+    className="text-indigo-600 font-bold hover:underline"
+  >
+    S'inscrire Gratuitement
+  </Link>
+          
         </p>
       </motion.div>
     </div>

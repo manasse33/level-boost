@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView, useAnimation } from 'framer-motion';
 import { 
   X, ChevronRight, AlertCircle, CheckCircle, 
-  Eye, Loader, Menu 
-} from
+  Eye, Loader as LoaderIcon, Menu 
+} from 'lucide-react'
 export const Loader = ({ size = 'md', color = 'indigo' }) => {
   const sizeClasses = {
     sm: 'w-8 h-8 border-2',
@@ -25,3 +25,4 @@ export const PageLoader = () => (
     </div>
   </div>
 );
+

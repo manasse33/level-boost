@@ -1,5 +1,12 @@
 // ============= REGISTER PAGE =============
-export const RegisterPage = ({ onNavigate, onRegister }) => {
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Input, Button, Toast } from '../../components/common'; // adapte selon ton arborescence
+import { AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+
+export const RegisterPage = ({ onRegister }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -71,7 +78,7 @@ export const RegisterPage = ({ onNavigate, onRegister }) => {
             label="Nom complet"
             value={formData.name}
             onChange={(val) => handleChange('name', val)}
-            placeholder="John Doe"
+            placeholder="Manasse AFOULA"
             required
           />
 
@@ -120,15 +127,16 @@ export const RegisterPage = ({ onNavigate, onRegister }) => {
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
-          Déjà inscrit ?{' '}
-          <button
-            onClick={() => onNavigate('/login')}
-            className="text-indigo-600 font-bold hover:underline"
-          >
-            Se connecter
-          </button>
-        </p>
+       <p className="mt-6 text-center text-sm text-slate-600">
+  Déjà inscrit ?{' '}
+  <Link
+    to="/login"
+    className="text-indigo-600 font-bold hover:underline"
+  >
+    Se connecter
+  </Link>
+</p>
+
       </motion.div>
     </div>
   );

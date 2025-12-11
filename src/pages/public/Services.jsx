@@ -1,4 +1,7 @@
 // ============= SERVICES PAGE =============
+import React from 'react';
+import { Card, Button } from '../../components/common'; // adapte le chemin si nécessaire
+import { Award } from 'lucide-react';
 export const ServicesPage = () => {
   const services = [
     {

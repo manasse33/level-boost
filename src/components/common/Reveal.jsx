@@ -1,10 +1,11 @@
 // ============= REVEAL ANIMATION =============
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView, useAnimation } from 'framer-motion';
-import { 
-  X, ChevronRight, AlertCircle, CheckCircle, 
-  Eye, Loader, Menu 
-} from
+import {
+  X, ChevronRight, AlertCircle, CheckCircle,
+  Eye, Loader, Menu
+} from 'lucide-react';
+
 export const Reveal = ({ children, width = '100%', delay = 0 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });

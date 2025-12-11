@@ -12,7 +12,7 @@ import {
   ContestParticipationForm, Badge, Button, StatsDashboard,
   LeadCard, DataTable, ReportCard, Card, EmptyState,
   FilterPanel, SearchBar, Tabs
-} from '../components';
+} from '../../components';
 
 // ============= TALENTS PAGE =============
 export const TalentsPage = () => {

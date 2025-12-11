@@ -1,113 +1,238 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Layouts
-// import PublicLayout from './layouts/PublicLayout';
-// import DashboardLayout from './layouts/DashboardLayout';
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-// Pages Public
-import Home from './pages/Home';
-import Services from './pages/Services';
-import Talents from './pages/Talents';
-import Contests from './pages/Contests';
-import Pricing from './pages/Pricing';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
+import { Navbar, Footer } from "./components/navigation";
+import { PageLoader } from "./components/common";
 
-// Pages Dashboard
-import DashboardOverview from './pages/Dashboard/Overview';
-import MyProfiles from './pages/Dashboard/MyProfiles';
-import MyOrders from './pages/Dashboard/MyOrders';
-import MySubscriptions from './pages/Dashboard/MySubscriptions';
-import Settings from './pages/Dashboard/Settings';
+// Public
+import {
+  HomePage,
+  ServicesPage,
+  TalentsPage,
+  ContestsPage,
+  PricingPage,
+  LoginPage,
+  RegisterPage
+} from "./pages/public";
 
-// Pages Admin
-import AdminDashboard from './pages/Admin/Dashboard';
-import AdminOrders from './pages/Admin/Orders';
-import AdminLeads from './pages/Admin/Leads';
+// Dashboard
+import {
+  DashboardOverview,
+  MyProfilesPage,
+  MyOrdersPage,
+  MySubscriptionsPage,
+  SettingsPage
+} from "./pages/Dashboard";
 
-// Protected Route Component
-const ProtectedRoute = ({ children, adminOnly = false }) => {
+// Admin
+import { AdminDashboard, AdminOrders, AdminLeads } from "./pages/Admin";
+
+
+// --------------------------------------------------------
+// 🔒 PROTECTION DES ROUTES (DANS APP DIRECTEMENT)
+// --------------------------------------------------------
+const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
+  if (loading) return <PageLoader />;
+  return user ? children : <Navigate to="/login" replace />;
 };
 
-function AppRoutes() {
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  return user?.role === "admin" ? children : <Navigate to="/" replace />;
+};
+
+
+// --------------------------------------------------------
+// ✨ WRAPPER AVEC ANIMATION (DANS APP DIRECTEMENT)
+// --------------------------------------------------------
+const AnimatedPage = ({ children }) => (
+  <AnimatePresence mode="wait">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="min-h-screen"
+    >
+      {children}
+    </motion.div>
+  </AnimatePresence>
+);
+
+
+// --------------------------------------------------------
+// 🧱 LAYOUT GLOBAL AVEC NAV + FOOTER
+// --------------------------------------------------------
+const Layout = ({ children }) => {
+  const { user, logout } = useAuth();
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar user={user} onLogout={logout} />
+      <AnimatedPage>{children}</AnimatedPage>
+      <Footer />
+    </div>
+  );
+};
+
+
+// --------------------------------------------------------
+// 🌍 TOUT LE ROUTING EST GÉRÉ ICI
+// --------------------------------------------------------
+const AppRoutes = () => {
+  const { loading } = useAuth();
+
+  if (loading) return <PageLoader />;
+
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/talents" element={<Talents />} />
-        <Route path="/contests" element={<Contests />} />
-        <Route path="/pricing" element={<Pricing />} />
-      </Route>
+      {/* ---------------- AUTH SANS LAYOUT ---------------- */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
-      {/* Auth Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* ---------------- PUBLIC ---------------- */}
+      <Route
+        path="/"
+        element={
+          <Layout>
+            <HomePage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <Layout>
+            <ServicesPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/talents"
+        element={
+          <Layout>
+            <TalentsPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/contests"
+        element={
+          <Layout>
+            <ContestsPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/pricing"
+        element={
+          <Layout>
+            <PricingPage />
+          </Layout>
+        }
+      />
 
-      {/* Dashboard Routes */}
+      {/* ---------------- USER DASHBOARD ---------------- */}
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
+          <PrivateRoute>
+            <Layout>
+              <DashboardOverview />
+            </Layout>
+          </PrivateRoute>
         }
-      >
-        <Route index element={<DashboardOverview />} />
-        <Route path="profiles" element={<MyProfiles />} />
-        <Route path="orders" element={<MyOrders />} />
-        <Route path="subscriptions" element={<MySubscriptions />} />
-        <Route path="settings" element={<Settings />} />
-      </Route>
+      />
+      <Route
+        path="/dashboard/profiles"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <MyProfilesPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/dashboard/orders"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <MyOrdersPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/dashboard/subscriptions"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <MySubscriptionsPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/dashboard/settings"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <SettingsPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
 
-      {/* Admin Routes */}
+      {/* ---------------- ADMIN ---------------- */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute adminOnly>
-            <DashboardLayout />
-          </ProtectedRoute>
+          <AdminRoute>
+            <Layout>
+              <AdminDashboard />
+            </Layout>
+          </AdminRoute>
         }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="leads" element={<AdminLeads />} />
-      </Route>
-
-      {/* 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <AdminRoute>
+            <Layout>
+              <AdminOrders />
+            </Layout>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/leads"
+        element={
+          <AdminRoute>
+            <Layout>
+              <AdminLeads />
+            </Layout>
+          </AdminRoute>
+        }
+      />
     </Routes>
   );
-}
+};
 
+
+// --------------------------------------------------------
+// 🚀 APP FINALE AVEC ROUTER + AUTH
+// --------------------------------------------------------
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <AuthProvider>
+      <BrowserRouter>
         <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

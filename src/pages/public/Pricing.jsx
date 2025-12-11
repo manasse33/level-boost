@@ -1,4 +1,11 @@
 // ============= PRICING PAGE =============
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Badge, Card,PageLoader,Button} from '../../components/common'; // adapte selon ton arborescence
+import { Modal } from '../../components'; // ou ton chemin exact
+import { ContestParticipationForm } from '../../components/forms'; // chemin exact
+import { PackageCard } from '../../components/features'; // chemin exact
+import {Star} from 'lucide-react'
 export const PricingPage = ({ onNavigate }) => {
   const packages = [
     {

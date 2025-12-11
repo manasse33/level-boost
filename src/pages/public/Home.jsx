@@ -1,6 +1,3 @@
-// ============= PUBLIC PAGES =============
-// Pages publiques accessibles sans authentification
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,7 +7,7 @@ import {
 import { 
   Button, Reveal, Input, Card, Badge, PackageCard, 
   TalentCard, ContestCard, Modal, Toast 
-} from '../components';
+} from '../../components';
 
 // ============= HOME PAGE =============
 export const HomePage = ({ onNavigate }) => {
