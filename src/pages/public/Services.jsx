@@ -1,260 +1,303 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { 
-  Video, Camera, Mic, 
-  TrendingUp, Search, Users, 
-  Briefcase, Award, Calendar, 
-  ArrowRight, CheckCircle2, Sparkles 
+  ArrowLeft, CheckCircle, Palette, Users, Megaphone, 
+  Sparkles, Globe, Rocket, GraduationCap, Newspaper,
+  Mail, MessageCircle, ChevronRight, ChevronDown, Award
 } from 'lucide-react';
 
-// ============= SERVICES PAGE (PREMIUM LIGHT) =============
-export const ServicesPage = ({ onNavigate }) => {
-  
-  // Enrichissement des données pour le design
-  const servicesData = [
+export function ServicesPage() {
+  const [openService, setOpenService] = useState(null);
+
+  const packs = [
     {
-      id: "production",
-      title: "Production Studio",
-      subtitle: "Créez une image digne des majors.",
-      description: "Des équipements cinéma RED/Arri et une équipe de post-production primée.",
-      color: "indigo",
-      icon: Video,
-      items: [
-        { 
-          name: "Clip Vidéo 4K", 
-          price: "150 000", 
-          currency: "FCFA",
-          duration: "2-3 jours de tournage",
-          icon: Video,
-          features: ["Scénarisation incluse", "Montage dynamique", "Color grading cinéma"],
-          popular: true
-        },
-        { 
-          name: "Shooting Photo Pro", 
-          price: "75 000", 
-          currency: "FCFA",
-          duration: "1 jour",
-          icon: Camera,
-          features: ["Studio ou extérieur", "Retouches haute-déf", "3 tenues incluses"],
-          popular: false
-        },
-        { 
-          name: "Podcast / Interview", 
-          price: "50 000", 
-          currency: "FCFA",
-          duration: "1/2 journée",
-          icon: Mic,
-          features: ["Captation multi-cam", "Prise de son studio", "Mixage audio inclus"],
-          popular: false
-        },
-      ]
+      name: "Basique",
+      price: 49,
+      description: "Idéal pour démarrer votre visibilité.",
+      features: [
+        "Visibilité starter",
+        "1 post réseau social"
+      ],
+      highlighted: false
     },
     {
-      id: "marketing",
-      title: "Marketing Digital",
-      subtitle: "Faites exploser vos streams.",
-      description: "Stratégies d'acquisition de fans basées sur la data et les tendances actuelles.",
-      color: "emerald",
-      icon: TrendingUp,
-      items: [
-        { 
-          name: "Campagne Social Media", 
-          price: "200 000", 
-          currency: "FCFA",
-          duration: "1 mois",
-          icon: Users,
-          features: ["Stratégie TikTok/Reels", "Création de visuels", "Rapport hebdomadaire"],
-          popular: true
-        },
-        { 
-          name: "SEO / Visibilité", 
-          price: "150 000", 
-          currency: "FCFA",
-          duration: "1 mois",
-          icon: Search,
-          features: ["Optimisation Spotify", "Référencement Google", "Bio & Press Kit"],
-          popular: false
-        },
-        { 
-          name: "Community Management", 
-          price: "100 000", 
-          currency: "FCFA",
-          duration: "Mensuel",
-          icon: Sparkles,
-          features: ["Animation de communauté", "Réponse aux DM", "Planning éditorial"],
-          popular: false
-        },
-      ]
+      name: "Standard",
+      price: 89,
+      description: "Pour une croissance accélérée.",
+      features: [
+        "Croissance boostée",
+        "2 posts réseaux sociaux",
+        "1 story par semaine"
+      ],
+      highlighted: true,
+      badge: "POPULAIRE"
     },
     {
-      id: "business",
-      title: "Business & Strategy",
-      subtitle: "Gérez votre carrière.",
-      description: "Ne soyez plus seul face à l'industrie. Conseil juridique et opportunités.",
-      color: "purple",
-      icon: Briefcase,
-      items: [
-        { 
-          name: "Gestion de Carrière", 
-          price: "300 000", 
-          currency: "FCFA",
-          duration: "Mensuel",
-          icon: Briefcase,
-          features: ["Négociation contrats", "Recherche labels", "Protection droits"],
-          popular: true
-        },
-        { 
-          name: "Consulting Stratégique", 
-          price: "150 000", 
-          currency: "FCFA",
-          duration: "Par session",
-          icon: TrendingUp,
-          features: ["Audit de projet", "Plan de lancement", "Budgetisation"],
-          popular: false
-        },
-        { 
-          name: "Booking & Events", 
-          price: "Sur devis", 
-          currency: "",
-          duration: "Variable",
-          icon: Calendar,
-          features: ["Recherche de dates", "Logistique tournée", "Partenariats marques"],
-          popular: false
-        },
-      ]
+      name: "Premium",
+      price: 149,
+      description: "Couverture complète et support.",
+      features: [
+        "4 posts par mois",
+        "2 stories par semaine",
+        "Support prioritaire"
+      ],
+      highlighted: false
     },
+    {
+      name: "Élite",
+      price: 299,
+      description: "Gestion totale 24/7.",
+      features: [
+        "Accès total",
+        "Gestion complète",
+        "Support dédié 24/7",
+        "Reporting mensuel"
+      ],
+      highlighted: false,
+      elite: true
+    }
+  ];
+
+  const services = [
+    {
+      icon: <Palette className="w-5 h-5" />,
+      title: "Création Visuelle & Vidéo",
+      description: "Identité visuelle, logos, montages vidéo reels/tiktok, et graphisme pour vos réseaux."
+    },
+    {
+      icon: <Users className="w-5 h-5" />,
+      title: "Community Management",
+      description: "Animation de votre communauté, réponse aux messages, et modération."
+    },
+    {
+      icon: <Megaphone className="w-5 h-5" />,
+      title: "Publicité (Ads)",
+      description: "Campagnes sponsorisées sur Meta, TikTok et Google pour maximiser votre portée."
+    },
+    {
+      icon: <Sparkles className="w-5 h-5" />,
+      title: "Storytelling & Branding",
+      description: "Définition de votre voix, de votre image de marque et de votre stratégie de contenu."
+    },
+    {
+      icon: <Globe className="w-5 h-5" />,
+      title: "Sites Web",
+      description: "Création de landing pages ou sites vitrines optimisés pour la conversion."
+    }
+  ];
+
+  const additionalOptions = [
+    { icon: <Rocket className="w-5 h-5" />, title: "Livraison Express (Rush)" },
+    { icon: <GraduationCap className="w-5 h-5" />, title: "Session Coaching 1h" },
+    { icon: <Newspaper className="w-5 h-5" />, title: "Communiqué de Presse" }
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20">
-      
-      {/* HEADER SECTION */}
-      <section className="pt-32 pb-16 px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/50 rounded-full blur-[100px] -z-10 mix-blend-multiply" />
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="inline-block py-1 px-3 rounded-full bg-white border border-slate-200 text-indigo-600 font-bold text-sm mb-6 shadow-sm">
-              Nos Prestations
-            </span>
-            <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight">
-              Investissez dans <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-                Votre Succès
-              </span>
-            </h1>
-            <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium">
-              Une grille tarifaire transparente pour des services haut de gamme. 
-              Choisissez l'excellence pour chaque étape de votre projet.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24 font-sans text-slate-900 dark:text-white">
+    
 
-      {/* SERVICES LIST */}
-      <div className="max-w-7xl mx-auto px-6 space-y-24">
+      {/* Main Content Centered */}
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col gap-12 pt-10">
         
-        {servicesData.map((category, idx) => (
-          <section key={category.id} className="relative">
-            {/* Category Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-              <div>
-                <div className={`inline-flex items-center gap-2 mb-3 text-${category.color}-600 font-bold uppercase tracking-wider text-sm`}>
-                  <category.icon size={18} />
-                  {category.title}
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-                  {category.subtitle}
-                </h2>
-                <p className="text-slate-500 mt-2 max-w-lg text-lg">
-                  {category.description}
-                </p>
-              </div>
-              <div className="hidden md:block h-px flex-1 bg-slate-200 mx-8 mb-4" />
+        {/* Packs Section */}
+        <section className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Nos Packs Standardisés</h2>
+              <p className="hidden sm:block text-slate-500 mt-1">Des solutions clés en main pour tous les budgets.</p>
             </div>
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded-full uppercase tracking-wider">
+              Mensuel
+            </span>
+          </div>
 
-            {/* Cards Grid */}
-            <div className="grid md:grid-cols-3 gap-8">
-              {category.items.map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group relative bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+          {/* Pricing Grid/Carousel */}
+          <div className="overflow-x-auto pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
+            <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 snap-x snap-mandatory sm:snap-none">
+              {packs.map((pack, index) => (
+                <div
+                  key={index}
+                  className={`snap-center shrink-0 w-[85%] sm:w-auto flex flex-col rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden group ${
+                    pack.highlighted
+                      ? 'border-2 border-blue-600 bg-white dark:bg-slate-800 transform lg:-translate-y-2'
+                      : pack.elite
+                      ? 'border border-slate-200 dark:border-slate-700 bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-slate-900'
+                      : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                  }`}
                 >
-                  {/* Popular Badge */}
-                  {item.popular && (
-                    <div className="absolute top-6 right-6 bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-slate-900/20">
-                      <Sparkles size={10} /> Populaire
+                  {pack.highlighted && (
+                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg z-20">
+                      {pack.badge}
                     </div>
                   )}
+                  
+                  {!pack.highlighted && !pack.elite && (
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                  )}
 
-                  {/* Icon Header */}
-                  <div className={`w-14 h-14 rounded-2xl bg-${category.color}-50 flex items-center justify-center mb-6 text-${category.color}-600 group-hover:scale-110 transition-transform duration-300`}>
-                    <item.icon size={28} />
-                  </div>
-
-                  {/* Title & Price */}
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{item.name}</h3>
+                  <div className="flex flex-col gap-2 mb-6 relative z-10">
+                    <h3 className={`font-bold text-sm uppercase tracking-wider flex items-center gap-2 ${
+                      pack.elite ? 'text-slate-900 dark:text-white' : 'text-blue-600 dark:text-blue-400'
+                    }`}>
+                      {pack.name}
+                      {pack.elite && <Award className="w-4 h-4 text-yellow-500" />}
+                    </h3>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-slate-900 tracking-tight">{item.price}</span>
-                      <span className="text-sm font-bold text-slate-400">{item.currency}</span>
+                      <span className="text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white">
+                        {pack.price}€
+                      </span>
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                        /mois
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 text-sm text-slate-500 font-medium bg-slate-50 inline-block px-3 py-1 rounded-lg">
-                      <Calendar size={14} />
-                      {item.duration}
-                    </div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {pack.description}
+                    </p>
                   </div>
 
-                  {/* Features List */}
-                  <div className="flex-1 mb-8">
-                    <ul className="space-y-3">
-                      {item.features.map((feat, f) => (
-                        <li key={f} className="flex items-start gap-3 text-slate-600 text-sm">
-                          <CheckCircle2 size={16} className={`mt-0.5 text-${category.color}-500 shrink-0`} />
-                          {feat}
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="flex flex-col gap-4 mb-8 flex-1">
+                    {pack.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300">
+                        <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Action Button */}
-                  <button className={`w-full py-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
-                    ${item.popular 
-                      ? `bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-900/10` 
-                      : 'bg-white border-2 border-slate-100 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  <button
+                    className={`w-full h-12 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                      pack.highlighted
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50'
+                        : pack.elite
+                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
+                        : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white'
                     }`}
                   >
-                    Commander
-                    <ArrowRight size={16} />
+                    {pack.highlighted ? 'Choisir ce pack' : 'Sélectionner'}
                   </button>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </section>
-        ))}
+          </div>
 
-        {/* Custom Quote CTA */}
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[3rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-500/30">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-          <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-black mb-6">Un besoin spécifique ?</h2>
-            <p className="text-indigo-100 text-lg mb-10">
-              Nous concevons des packages personnalisés pour les labels et les projets d'envergure.
+          <div className="text-center mt-2">
+            <button className="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:underline decoration-2 underline-offset-4">
+              Comparer tous les packs en détail
+            </button>
+          </div>
+        </section>
+
+        <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+        {/* Services Section */}
+        <section className="flex flex-col gap-8">
+          <div className="flex flex-col gap-2 max-w-2xl">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              Services à la carte
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400">
+              Des besoins spécifiques ? Construisez votre stratégie sur-mesure.
             </p>
-            <button className="bg-white text-indigo-600 px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl">
-              Demander un devis sur-mesure
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {services.map((service, index) => (
+              <details
+                key={index}
+                className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden transition-all duration-300 open:shadow-lg open:border-blue-200 dark:open:border-blue-900"
+                open={openService === index}
+                onToggle={(e) => setOpenService(e.target.open ? index : null)}
+              >
+                <summary className="flex cursor-pointer items-center justify-between p-6 list-none select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                      {service.icon}
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        {service.title}
+                      </span>
+                      {!openService && openService !== index && (
+                         <span className="text-xs text-slate-400 line-clamp-1 mt-1 font-normal md:hidden">
+                           En savoir plus...
+                         </span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown className="w-5 h-5 text-slate-400 transition-transform duration-300 group-open:rotate-180 group-open:text-blue-600" />
+                </summary>
+                <div className="px-6 pb-6 pt-0">
+                  <p className="text-slate-600 dark:text-slate-300 pl-[64px] leading-relaxed">
+                    {service.description}
+                  </p>
+                  {index === 0 && (
+                    <div className="flex justify-end mt-4 pl-[64px]">
+                      <button className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                        Voir les tarifs →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* Additional Options */}
+        <section className="flex flex-col gap-6 pb-12">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Options Additionnelles
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            {additionalOptions.map((option, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {option.icon}
+                  </span>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {option.title}
+                  </span>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 transition-colors" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* Sticky Footer CTA - Full Width */}
+      <div className="fixed bottom-0 left-0 w-full z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-4">
+           <div className="hidden md:block flex-1">
+             <p className="font-bold text-slate-900 dark:text-white">Une question sur nos services ?</p>
+             <p className="text-sm text-slate-500">Notre équipe vous répond sous 2h.</p>
+           </div>
+           <div className="flex-1 md:flex-none flex items-center gap-3">
+            <button className="flex-1 md:w-auto px-8 h-12 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2">
+              <Mail className="w-5 h-5" />
+              Nous contacter
+            </button>
+            <button className="w-12 h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:bg-blue-50 transition-colors">
+              <MessageCircle className="w-6 h-6" />
             </button>
           </div>
         </div>
-
       </div>
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
-};
+}
+
+export default ServicesPage;

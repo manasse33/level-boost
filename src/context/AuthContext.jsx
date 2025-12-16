@@ -1,68 +1,99 @@
-// AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api  from '../api/axios'; // ou ton chemin API
+import api from '../api/axios'; // Assurez-vous que le chemin est bon
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // 1. Initialisation PARESSEUSE (Lazy) pour éviter la redirection immédiate
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  
+  // Si on a un user dans le storage, on ne charge pas, sinon oui
+  const [loading, setLoading] = useState(!localStorage.getItem('token'));
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('lb_token');
+    // On utilise 'token' car c'est ce que axios.js attend
+    const token = localStorage.getItem('token');
+    
     if (!token) {
       setLoading(false);
       return;
     }
+
     try {
-      const data = await api('/me');
-      setUser(data.user);
+      // Axios s'utilise comme ça (pas de 'method' ou 'body')
+      const response = await api.get('/me');
+      
+      // Mise à jour avec les données fraîches du serveur
+      setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
-      localStorage.removeItem('lb_token');
+      console.error("Session expirée", error);
+      logout();
     } finally {
       setLoading(false);
     }
   };
 
   const login = async (email, password) => {
-    const data = await api('/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    localStorage.setItem('lb_token', data.token);
-    setUser(data.user);
-    return data;
+    // Syntaxe correcte pour Axios
+    const response = await api.post('/login', { email, password });
+    
+    const { token, user } = response.data;
+
+    // IMPORTANT : On utilise 'token' pour matcher axios.js
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    setUser(user);
+    return response.data;
   };
 
   const register = async (userData) => {
-    const data = await api('/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-    localStorage.setItem('lb_token', data.token);
-    setUser(data.user);
-    return data;
+    const response = await api.post('/register', userData);
+    
+    const { token, user } = response.data;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    setUser(user);
+    return response.data;
   };
 
-  const logout = () => {
-    localStorage.removeItem('lb_token');
-    setUser(null);
-    window.location.hash = '#/';
+  const logout = async () => {
+    try {
+      await api.post('/logout');
+    } catch (e) {
+      // On ignore l'erreur de logout côté serveur si le token est déjà invalide
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      window.location.href = '/login';
+    }
   };
+
+  // Rôles autorisés pour l'admin (correspond à votre AdminRoute)
+  const allowedAdminRoles = ['admin', 'cm', 'da', 'sales'];
+  const isAdmin = user && allowedAdminRoles.includes(user.role);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
+      setUser, // Ajouté au cas où
       loading, 
       login, 
       register, 
       logout, 
       isAuth: !!user,
-      isAdmin: user?.role === 'admin'
+      isAdmin
     }}>
       {children}
     </AuthContext.Provider>

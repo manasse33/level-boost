@@ -69,6 +69,148 @@ export const contestsAPI = {
     api.post(`/contests/${contestId}/participants/${participantId}/vote`),
 };
 
+// ============= SERVICES =============
+const servicesAPI = {
+  // Récupérer tous les services
+  async getAllServices() {
+    try {
+      const response = await api.get('/services');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Récupérer un service par son ID
+  async getServiceById(id) {
+    try {
+      const response = await api.get(`/services/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Créer un nouveau service (admin)
+  async createService(serviceData) {
+    try {
+      const response = await api.post('/services', serviceData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Mettre à jour un service (admin)
+  async updateService(id, serviceData) {
+    try {
+      const response = await api.put(`/services/${id}`, serviceData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Supprimer un service (admin)
+  async deleteService(id) {
+    try {
+      const response = await api.delete(`/services/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Récupérer les services par catégorie
+  async getServicesByCategory(category, params = {}) {
+    try {
+      const response = await api.get(`/services/category/${category}`, { params });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Rechercher des services
+  async searchServices(query, filters = {}) {
+    try {
+      const response = await api.get('/services/search', {
+        params: {
+          q: query,
+          ...filters,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Récupérer les services populaires
+  async getPopularServices(limit = 6) {
+    try {
+      const response = await api.get('/services/popular', {
+        params: { limit },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Récupérer les services recommandés pour un utilisateur
+  async getRecommendedServices(userId, limit = 6) {
+    try {
+      const response = await api.get(`/users/${userId}/recommended-services`, {
+        params: { limit },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Soumettre un avis sur un service
+  async submitReview(serviceId, reviewData) {
+    try {
+      const response = await api.post(`/services/${serviceId}/reviews`, reviewData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Récupérer les avis d'un service
+  async getServiceReviews(serviceId, params = {}) {
+    try {
+      const response = await api.get(`/services/${serviceId}/reviews`, { params });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Récupérer les statistiques d'un service
+  async getServiceStats(serviceId) {
+    try {
+      const response = await api.get(`/services/${serviceId}/stats`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+};
+
+export const services = servicesAPI;
+
 // ============= REPORTS =============
 export const reportsAPI = {
   generate: (orderId) => api.post(`/orders/${orderId}/reports/generate`),
