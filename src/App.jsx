@@ -15,20 +15,21 @@ import {
   ContestsPage,
   PricingPage,
   LoginPage,
-  RegisterPage
+  RegisterPage,
+  ContestDetailsPage 
 } from "./pages/public";
 
 // Dashboard
-import {
-  DashboardOverview,
-  MyProfilesPage,
-  MyOrdersPage,
-  MySubscriptionsPage,
-  SettingsPage
-} from "./pages/Dashboard";
+// import {
+//   DashboardOverview,
+//   MyProfilesPage,
+//   MyOrdersPage,
+//   MySubscriptionsPage,
+//   SettingsPage
+// } from "./pages/Dashboard";
 
 // Admin
-import { AdminDashboard, AdminOrders, AdminLeads } from "./pages/Admin";
+import { AdminDashboard, AdminOrders, AdminLeads,PackagesPage ,ContestsPages  } from "./pages/Admin";
 
 
 // --------------------------------------------------------
@@ -128,6 +129,22 @@ const AppRoutes = () => {
         }
       />
       <Route
+  path="/contests/:slug"
+  element={
+    <Layout>
+      <ContestDetailsPage />
+    </Layout>
+  }
+/>
+<Route
+  path="/contests/:slug"
+  element={
+    <Layout>
+      <ContestDetailsPage />
+    </Layout>
+  }
+/>
+      <Route
         path="/pricing"
         element={
           <Layout>
@@ -137,7 +154,7 @@ const AppRoutes = () => {
       />
 
       {/* ---------------- USER DASHBOARD ---------------- */}
-      <Route
+      {/* <Route
         path="/dashboard"
         element={
           <PrivateRoute>
@@ -186,8 +203,9 @@ const AppRoutes = () => {
             </Layout>
           </PrivateRoute>
         }
-      />
+      /> */}
 
+      {/* ---------------- ADMIN ---------------- */}
       {/* ---------------- ADMIN ---------------- */}
       <Route
         path="/admin"
@@ -199,6 +217,31 @@ const AppRoutes = () => {
           </AdminRoute>
         }
       />
+      
+      {/* 👇 NOUVELLE ROUTE : GESTION DES PACKAGES */}
+      <Route
+        path="/admin/packages"
+        element={
+          <AdminRoute>
+            <Layout>
+              <PackagesPage />
+            </Layout>
+          </AdminRoute>
+        }
+      />
+
+      {/* 👇 NOUVELLE ROUTE : GESTION DES CONCOURS */}
+      <Route
+        path="/admin/contests"
+        element={
+          <AdminRoute>
+            <Layout>
+              <ContestsPages />
+            </Layout>
+          </AdminRoute>
+        }
+      />
+
       <Route
         path="/admin/orders"
         element={
@@ -219,7 +262,11 @@ const AppRoutes = () => {
           </AdminRoute>
         }
       />
+    
     </Routes>
+
+    
+    
   );
 };
 
