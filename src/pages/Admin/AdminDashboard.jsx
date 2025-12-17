@@ -87,13 +87,14 @@ export function AdminDashboard() {
     }
   ] : [];
 
-  const navItems = [
-    { label: "Accueil", icon: <Home className="w-5 h-5" />, active: true, path: '/dashboard' },
-    { label: "Services", icon: <PackageIcon className="w-5 h-5" />, active: false, path: '/packages' },
-    { label: "Concours", icon: <Trophy className="w-5 h-5" />, active: false, path: '/contests' },
-    { label: "CRM", icon: <Users className="w-5 h-5" />, active: false, path: '/leads' },
-    { label: "Commandes", icon: <ShoppingCart className="w-5 h-5" />, active: false, path: '/orders' },
-  ];
+const navItems = [
+  { label: "Accueil", icon: <Home className="w-5 h-5" />, active: true, path: '/admin' }, // ou /dashboard selon votre choix
+  // 👇 Ajoutez bien le préfixe /admin/ ici
+  { label: "Services", icon: <PackageIcon className="w-5 h-5" />, active: false, path: '/admin/packages' },
+  { label: "Concours", icon: <Trophy className="w-5 h-5" />, active: false, path: '/admin/contests' },
+  { label: "CRM", icon: <Users className="w-5 h-5" />, active: false, path: '/admin/leads' },
+  { label: "Commandes", icon: <ShoppingCart className="w-5 h-5" />, active: false, path: '/admin/orders' },
+];
 
   if (loading) {
     return (

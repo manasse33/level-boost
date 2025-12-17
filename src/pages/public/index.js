@@ -5,3 +5,4 @@ export { ContestsPage } from './Contests';
 export { PricingPage } from './Pricing';
 export { LoginPage } from './Login';
 export { RegisterPage } from './Register';
+export { ContestDetailsPage } from './ContestDetailsPage';
