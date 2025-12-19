@@ -6,3 +6,4 @@ export { PricingPage } from './Pricing';
 export { LoginPage } from './Login';
 export { RegisterPage } from './Register';
 export { ContestDetailsPage } from './ContestDetailsPage';
+export { AboutPage } from './About';

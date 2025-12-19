@@ -27,11 +27,10 @@ export function ContestDetailsPage() {
     const fetchContest = async () => {
       try {
         const res = await api.get(`/contests/${slug}`);
-        setContest(res.data.data || res.data); // Adaptez selon votre structure API
+        setContest(res.data.data || res.data); 
         setLoading(false);
       } catch (error) {
         console.error("Erreur chargement:", error);
-        // Si non trouvé, retour à la liste
         navigate('/contests');
       }
     };
@@ -52,13 +51,34 @@ export function ContestDetailsPage() {
     return styles[status] || styles.draft;
   };
 
+  /**
+   * --- CORRECTION ---
+   * Cette fonction sécurise les listes (prizes, rules).
+   * Elle gère les cas où l'API renvoie une String JSON, une String simple ou null.
+   */
+  const ensureArray = (data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    
+    // Si c'est une chaîne, on essaie de la parser comme du JSON (ex: "['Prix 1', 'Prix 2']")
+    if (typeof data === 'string') {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [data];
+      } catch (e) {
+        // Ce n'est pas du JSON, on retourne la string comme unique élément du tableau
+        return [data];
+      }
+    }
+    return [];
+  };
+
   // --- Action : Participer ---
   const handleParticipate = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      // Structure des données attendue par votre colonne 'submission_data' (JSON)
       const payload = {
         submission_data: {
           link: submission.link,
@@ -71,7 +91,6 @@ export function ContestDetailsPage() {
       
       alert("Félicitations ! Votre participation a été enregistrée.");
       setIsModalOpen(false);
-      // Optionnel : Recharger les données pour mettre à jour le compteur de participants
       setContest(prev => ({ ...prev, participation_count: prev.participation_count + 1 }));
 
     } catch (error) {
@@ -150,13 +169,13 @@ export function ContestDetailsPage() {
             </p>
           </section>
 
-          {/* Règles */}
+          {/* Règles - CORRIGÉ AVEC ensureArray */}
           <section className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <CheckCircle className="text-green-600" /> Règles à respecter
             </h2>
             <ul className="space-y-3">
-              {(contest.rules || []).map((rule, idx) => (
+              {ensureArray(contest.rules).map((rule, idx) => (
                 <li key={idx} className="flex gap-3 text-slate-600 dark:text-slate-300">
                   <span className="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
                     {idx + 1}
@@ -172,13 +191,13 @@ export function ContestDetailsPage() {
         {/* Colonne Droite (Sidebar) */}
         <div className="space-y-6">
           
-          {/* Prix */}
+          {/* Prix - CORRIGÉ AVEC ensureArray */}
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-slate-800 dark:to-slate-800 p-6 rounded-2xl border border-yellow-100 dark:border-slate-700 shadow-sm">
             <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-500 mb-4 flex items-center gap-2">
               <Trophy className="fill-current" /> Récompenses
             </h3>
             <ul className="space-y-3">
-              {(contest.prizes || []).map((prize, idx) => (
+              {ensureArray(contest.prizes).map((prize, idx) => (
                 <li key={idx} className="flex items-center gap-3 bg-white dark:bg-slate-700 p-3 rounded-xl border border-yellow-100 dark:border-slate-600 shadow-sm">
                   <div className="text-2xl">
                     {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}

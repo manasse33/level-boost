@@ -16,7 +16,8 @@ import {
   PricingPage,
   LoginPage,
   RegisterPage,
-  ContestDetailsPage 
+  ContestDetailsPage ,
+  AboutPage
 } from "./pages/public";
 
 // Dashboard
@@ -101,6 +102,14 @@ const AppRoutes = () => {
         element={
           <Layout>
             <HomePage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <Layout>
+            <AboutPage />
           </Layout>
         }
       />

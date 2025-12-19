@@ -20,6 +20,7 @@ export const Navbar = ({ currentPage, user, onLogout }) => {
   const navItems = [
     { path: '/', label: 'Accueil' },
     { path: '/services', label: 'Services' },
+     { path: '/about', label: 'A Propos' },
     { path: '/talents', label: 'Talents' },
     { path: '/contests', label: 'Concours' },
     { path: '/pricing', label: 'Tarifs' },
