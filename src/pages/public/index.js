@@ -7,3 +7,6 @@ export { LoginPage } from './Login';
 export { RegisterPage } from './Register';
 export { ContestDetailsPage } from './ContestDetailsPage';
 export { AboutPage } from './About';
+export {BecomeClientPage} from './Leads';
+export {ConfirmationPage} from './Confirmation';
+export {TalentDetailsPage} from './TalentDétailsPage';

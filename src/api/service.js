@@ -219,7 +219,7 @@ export const reportsAPI = {
 
 // ============= ADMIN =============
 export const adminAPI = {
-  getDashboard: () => api.get('/admin/dashboard'),
+  getDashboard: () => api.get('/admin'),
   getOrders: (params) => api.get('/admin/orders', { params }),
   getLeads: (params) => api.get('/admin/leads', { params }),
   getLeadsStats: () => api.get('/admin/leads/stats'),

@@ -1,302 +1,299 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
-import { 
-  Calendar, Trophy, Users, Clock, CheckCircle, 
-  ArrowLeft, Share2, AlertCircle, Loader2, Link as LinkIcon 
-} from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import ContestService from '../../api/contests';
+import { PageLoader } from '../../components/common/Loader';
 
-export function ContestDetailsPage() {
+const ContestDetailsPage = () => {
   const { slug } = useParams();
-  const navigate = useNavigate();
-
-  // --- States ---
   const [contest, setContest] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  
+  // Charte graphique
+  const colors = {
+    primary: "#EF4444",      // Rouge (Actions, Boutons, Liens)
+    secondary: "#3A3086",    // Violet profond (Titres, Fonds foncés)
+    accentYellow: "#FBBF24", // Jaune (Prix, Trophées)
+    earthBrown: "#8D6E63",   // Marron (Bordures subtiles)
+    bgLight: "#F9FAFB",      // Fond clair
+    bgDark: "#111827"        // Texte sombre
+  };
 
-  // Formulaire de participation
-  const [submission, setSubmission] = useState({
-    link: '',
-    message: ''
-  });
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-  // --- Chargement ---
+  // Styles SVG (Adaptés légèrement pour la transparence)
+  const tribalPattern = "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%233A3086\\' fill-opacity=\\'0.03\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')";
+  
+  const tribalPatternWhite = "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%23ffffff\\' fill-opacity=\\'0.10\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')";
+
+  // Fetch Data
   useEffect(() => {
     const fetchContest = async () => {
+      if (!slug) return;
+      setLoading(true);
       try {
-        const res = await api.get(`/contests/${slug}`);
-        setContest(res.data.data || res.data); 
-        setLoading(false);
+        const data = await ContestService.getBySlug(slug);
+        setContest(data);
       } catch (error) {
-        console.error("Erreur chargement:", error);
-        navigate('/contests');
+        console.error("Erreur chargement concours:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchContest();
-  }, [slug, navigate]);
+  }, [slug]);
 
-  // --- Helpers ---
-  const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR', {
-    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-  });
+  // Countdown Logic
+  useEffect(() => {
+    if (!contest || !contest.ended_at) return;
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      active: "bg-green-100 text-green-700 border-green-200",
-      ended: "bg-red-100 text-red-700 border-red-200",
-      draft: "bg-gray-100 text-gray-700 border-gray-200"
-    };
-    return styles[status] || styles.draft;
-  };
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = new Date(contest.ended_at).getTime() - now;
 
-  /**
-   * --- CORRECTION ---
-   * Cette fonction sécurise les listes (prizes, rules).
-   * Elle gère les cas où l'API renvoie une String JSON, une String simple ou null.
-   */
-  const ensureArray = (data) => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    
-    // Si c'est une chaîne, on essaie de la parser comme du JSON (ex: "['Prix 1', 'Prix 2']")
-    if (typeof data === 'string') {
-      try {
-        const parsed = JSON.parse(data);
-        return Array.isArray(parsed) ? parsed : [data];
-      } catch (e) {
-        // Ce n'est pas du JSON, on retourne la string comme unique élément du tableau
-        return [data];
-      }
-    }
-    return [];
-  };
-
-  // --- Action : Participer ---
-  const handleParticipate = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-
-    try {
-      const payload = {
-        submission_data: {
-          link: submission.link,
-          message: submission.message,
-          submitted_at: new Date().toISOString()
-        }
-      };
-
-      await api.post(`/contests/${contest.id}/participate`, payload);
-      
-      alert("Félicitations ! Votre participation a été enregistrée.");
-      setIsModalOpen(false);
-      setContest(prev => ({ ...prev, participation_count: prev.participation_count + 1 }));
-
-    } catch (error) {
-      console.error(error);
-      if (error.response?.status === 401) {
-        alert("Vous devez être connecté pour participer.");
-        navigate('/login', { state: { from: `/contests/${slug}` } });
-      } else if (error.response?.status === 409) {
-        alert("Vous participez déjà à ce concours !");
+      if (distance < 0) {
+        clearInterval(interval);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       } else {
-        alert("Une erreur est survenue. Réessayez.");
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        });
       }
-    } finally {
-      setSubmitting(false);
-    }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [contest]);
+
+  const handleParticipate = async () => {
+      alert("Implémenter la logique d'upload ici");
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600 w-10 h-10"/></div>;
-  if (!contest) return null;
+  if (loading) return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#EF4444]"></div>
+      </div>
+  );
+
+  if (!contest) return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] text-[#111827]">
+          <h2 className="text-2xl font-bold">Concours introuvable</h2>
+          <Link to="/contests" className="text-[#EF4444] mt-4 hover:underline">Retour à la liste</Link>
+      </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
+    <div className="bg-[#F9FAFB] text-[#111827] font-['Manrope',sans-serif] overflow-x-hidden" style={{ backgroundImage: tribalPattern }}>
+      <style>
+        {`
+          ::-webkit-scrollbar { width: 8px; height: 8px; }
+          ::-webkit-scrollbar-track { background: #F9FAFB; }
+          ::-webkit-scrollbar-thumb { background: #8D6E63; border-radius: 4px; }
+          ::-webkit-scrollbar-thumb:hover { background: #3A3086; }
+        `}
+      </style>
+      {loading && <PageLoader />}
       
-      {/* --- HERO HEADER --- */}
-      <div className="relative h-64 md:h-80 bg-slate-900">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{ backgroundImage: `url('https://source.unsplash.com/random/1200x600/?${contest.type}')` }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
-
-        <div className="absolute top-6 left-6 z-10">
-          <button onClick={() => navigate('/contests')} className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm">
-            <ArrowLeft size={18} /> Retour aux défis
-          </button>
-        </div>
-
-        <div className="absolute bottom-0 w-full p-6 md:p-10 max-w-7xl mx-auto left-0 right-0">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mb-3 border ${getStatusBadge(contest.status)}`}>
-                {contest.status === 'active' ? 'En cours' : contest.status}
-              </span>
-              <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">{contest.title}</h1>
-              <div className="flex items-center gap-4 text-slate-300 text-sm">
-                <span className="flex items-center gap-1"><Users size={16}/> {contest.participation_count} participants</span>
-                <span className="flex items-center gap-1"><Calendar size={16}/> Fin le {new Date(contest.ended_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-            
-            {contest.status === 'active' && (
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-1"
-              >
-                Participer au défi
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* --- CONTENT GRID --- */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div className="flex flex-col min-h-screen">
         
-        {/* Colonne Gauche (Détails) */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Description */}
-          <section className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <AlertCircle className="text-blue-600" /> À propos du défi
-            </h2>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-              {contest.description}
-            </p>
-          </section>
-
-          {/* Règles - CORRIGÉ AVEC ensureArray */}
-          <section className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <CheckCircle className="text-green-600" /> Règles à respecter
-            </h2>
-            <ul className="space-y-3">
-              {ensureArray(contest.rules).map((rule, idx) => (
-                <li key={idx} className="flex gap-3 text-slate-600 dark:text-slate-300">
-                  <span className="flex-shrink-0 w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
-                    {idx + 1}
-                  </span>
-                  <span>{rule}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-        </div>
-
-        {/* Colonne Droite (Sidebar) */}
-        <div className="space-y-6">
-          
-          {/* Prix - CORRIGÉ AVEC ensureArray */}
-          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-slate-800 dark:to-slate-800 p-6 rounded-2xl border border-yellow-100 dark:border-slate-700 shadow-sm">
-            <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-500 mb-4 flex items-center gap-2">
-              <Trophy className="fill-current" /> Récompenses
-            </h3>
-            <ul className="space-y-3">
-              {ensureArray(contest.prizes).map((prize, idx) => (
-                <li key={idx} className="flex items-center gap-3 bg-white dark:bg-slate-700 p-3 rounded-xl border border-yellow-100 dark:border-slate-600 shadow-sm">
-                  <div className="text-2xl">
-                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
-                  </div>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">{prize}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Infos Dates */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-bold mb-4">Calendrier</h3>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Calendar size={20} />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold uppercase">Lancement</p>
-                  <p className="text-sm font-medium">{formatDate(contest.started_at)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
-                  <Clock size={20} />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold uppercase">Date limite</p>
-                  <p className="text-sm font-medium">{formatDate(contest.ended_at)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
-            <Share2 size={18} /> Partager ce défi
-          </button>
-
-        </div>
-      </main>
-
-      {/* --- MODAL PARTICIPATION --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* Main Content */}
+        <main className="flex-grow flex flex-col items-center w-full">
+          <div className="w-full max-w-[1280px] px-4 md:px-8 py-6 flex flex-col gap-6">
             
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-              <h3 className="text-xl font-bold">Je participe ! 🚀</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">Fermer</button>
+            {/* Breadcrumb */}
+            <div className="flex flex-wrap gap-2 items-center text-sm font-medium">
+              <Link className="text-gray-500 hover:text-[#EF4444] transition-colors" to="/contests">Concours</Link>
+              <span className="material-symbols-outlined text-gray-400 text-[16px]">chevron_right</span>
+              <span className="text-gray-500 capitalize">{contest.type}</span>
+              <span className="material-symbols-outlined text-gray-400 text-[16px]">chevron_right</span>
+              <span className="text-[#3A3086] font-bold">{contest.title}</span>
             </div>
 
-            <form onSubmit={handleParticipate} className="p-6 space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-sm text-blue-800 dark:text-blue-300 mb-4">
-                Pour participer, soumettez un lien vers votre travail (Google Drive, YouTube, Portfolio, etc.) et ajoutez une courte description.
+            {/* Hero Banner Dynamique */}
+            <div className="relative w-full rounded-3xl overflow-hidden min-h-[480px] flex flex-col justify-end p-6 md:p-10 group shadow-xl shadow-[#3A3086]/20">
+              <div 
+                className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-700 group-hover:scale-105" 
+                style={{ backgroundImage: `url("${contest.image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCxwvxaVKKukgE1gYSIqrB9-Vr6nb_vSuWOfuYMg1rb8TUerZ_u38E8065eig7SX3a_z6QZd3QXAlLqs17dl4YUb2CjfOXNIkgluxlpYnO12V3RFgckrB4Kk7vYeOo_S624AlEQeSxPZzElRFQIkJ75iJ5T-hfeBQR9Z4nLLOvHrZh3PjYlwURKpT_Jkp5viUuTrCQSA2r_Kcwx8XwavORrapUY_WWn4P4Q66Io2hHux-Bqki8Pb429lmh-Kb036UobqdVvXu8BjlVn'}")` }}
+              ></div>
+              {/* Gradient overlay utilisant le Violet Secondaire */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3A3086] via-[#3A3086]/70 to-transparent z-10"></div>
+              <div className="absolute inset-0 opacity-40 z-10 pointer-events-none" style={{ backgroundImage: tribalPatternWhite }}></div>
+              
+              <div className="relative z-20 flex flex-col lg:flex-row gap-8 items-end justify-between w-full">
+                <div className="flex flex-col gap-5 max-w-2xl mb-2 lg:mb-0">
+                  <div className="flex items-center gap-3">
+                    {/* Badge Statut en Rouge Primaire */}
+                    <span className={`px-3 py-1 rounded-full ${contest.status === 'active' ? 'bg-[#EF4444]' : 'bg-gray-500'} text-white text-xs font-bold uppercase tracking-wider shadow-lg animate-pulse`}>
+                      {contest.status === 'active' ? 'Ferme Bientôt' : contest.status}
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-md border border-white/20">
+                      {contest.type}
+                    </span>
+                  </div>
+                  <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight tracking-tight uppercase drop-shadow-lg">
+                    {contest.title}
+                  </h1>
+                  <p className="text-slate-200 text-lg md:text-xl max-w-xl font-medium drop-shadow-md">
+                    {contest.objective}
+                  </p>
+                </div>
+                
+                {/* Countdown Timer Dynamique */}
+                <div className="bg-[#ffffff]/95 backdrop-blur-xl border border-white/50 p-6 rounded-2xl flex flex-col gap-4 min-w-[320px] shadow-2xl shadow-black/10">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[#3A3086] text-xs font-bold uppercase tracking-widest">Temps Restant</p>
+                    {contest.status === 'active' && <span className="flex h-2 w-2 rounded-full bg-[#EF4444] animate-ping"></span>}
+                  </div>
+                  <div className="flex justify-between items-center gap-2">
+                    {/* Compteurs avec texte Rouge Primaire et Bordure Violette */}
+                    <div className="flex flex-col items-center">
+                      <div className="bg-white w-14 h-14 rounded-xl flex items-center justify-center text-[#EF4444] font-black text-2xl shadow-sm border border-gray-200">{timeLeft.days}</div>
+                      <span className="text-[10px] uppercase mt-1 text-gray-500 font-bold">Jours</span>
+                    </div>
+                    <span className="text-[#3A3086] font-bold text-xl">:</span>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-white w-14 h-14 rounded-xl flex items-center justify-center text-[#3A3086] font-black text-2xl shadow-sm border border-gray-200">{timeLeft.hours}</div>
+                      <span className="text-[10px] uppercase mt-1 text-gray-500 font-bold">Heures</span>
+                    </div>
+                    <span className="text-[#3A3086] font-bold text-xl">:</span>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-white w-14 h-14 rounded-xl flex items-center justify-center text-[#3A3086] font-black text-2xl shadow-sm border border-gray-200">{timeLeft.minutes}</div>
+                      <span className="text-[10px] uppercase mt-1 text-gray-500 font-bold">Min</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleParticipate}
+                    disabled={contest.status !== 'active'}
+                    className={`mt-2 w-full font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 group/btn active:scale-95 ${contest.status === 'active' ? 'bg-[#EF4444] hover:bg-red-600 text-white shadow-[#EF4444]/30' : 'bg-gray-400 cursor-not-allowed text-gray-200'}`}
+                  >
+                    {contest.status === 'active' ? 'Soumettre votre entrée' : 'Concours terminé'}
+                    {contest.status === 'active' && <span className="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">arrow_forward</span>}
+                  </button>
+                </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Lien vers votre création</label>
-                <div className="relative">
-                  <LinkIcon className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
-                  <input 
-                    type="url" 
-                    required
-                    placeholder="https://..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={submission.link}
-                    onChange={e => setSubmission({...submission, link: e.target.value})}
-                  />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
+              <div className="lg:col-span-8 flex flex-col gap-8">
+                
+                {/* Tabs */}
+                <div className="sticky top-[73px] z-30 bg-[#F9FAFB]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 md:mx-0 md:px-0 border-b border-gray-200">
+                  <nav aria-label="Tabs" className="flex gap-2 overflow-x-auto no-scrollbar">
+                    <button className="shrink-0 rounded-full px-6 py-2.5 text-sm font-bold bg-[#3A3086] text-white shadow-lg shadow-[#3A3086]/20">Aperçu</button>
+                    <button className="shrink-0 rounded-full px-6 py-2.5 text-sm font-bold text-gray-500 hover:bg-white hover:text-[#EF4444] transition-all hover:shadow-sm">Règles & Éligibilité</button>
+                    <button className="shrink-0 rounded-full px-6 py-2.5 text-sm font-bold text-gray-500 hover:bg-white hover:text-[#EF4444] transition-all hover:shadow-sm">Prix</button>
+                  </nav>
+                </div>
+
+                <div className="flex flex-col gap-10">
+                  {/* The Brief */}
+                  <section>
+                    <h3 className="text-2xl font-black text-[#3A3086] mb-4 flex items-center gap-2">
+                      <span className="w-2 h-8 bg-[#EF4444] rounded-full"></span>
+                      Le Brief
+                    </h3>
+                    <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed text-lg bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                      <p className="whitespace-pre-line mb-4">{contest.description}</p>
+                      
+                      {contest.rules && (
+                        <div className="mt-6 bg-[#F9FAFB] p-4 rounded-xl border border-gray-100">
+                            <h4 className="font-bold text-[#3A3086] mb-2">Règles spécifiques :</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                                {Array.isArray(contest.rules) ? 
+                                    contest.rules.map((rule, idx) => <li key={idx} className="text-sm text-gray-600">{rule}</li>) : 
+                                    <li className="text-sm">Voir le document complet.</li>
+                                }
+                            </ul>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Prizes */}
+                  <section>
+                    <h3 className="text-2xl font-black text-[#3A3086] mb-6 flex items-center gap-2">
+                      <span className="w-2 h-8 bg-[#FBBF24] rounded-full"></span>
+                      Prix
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {contest.prizes && Array.isArray(contest.prizes) ? contest.prizes.map((prize, idx) => (
+                          <div key={idx} className={`bg-white border border-gray-100 rounded-2xl p-6 relative overflow-hidden group hover:border-[#FBBF24] transition-all hover:shadow-lg ${idx === 0 ? 'ring-2 ring-[#FBBF24]/30' : ''}`}>
+                            <div className="absolute top-0 right-0 p-4 opacity-[0.05] group-hover:opacity-10 transition-opacity">
+                              <span className="material-symbols-outlined text-9xl text-[#FBBF24]">trophy</span>
+                            </div>
+                            <div className="relative z-10">
+                              <span className={`inline-block px-3 py-1 rounded-full text-white text-xs font-bold mb-3 shadow-md ${idx === 0 ? 'bg-gradient-to-r from-[#FBBF24] to-amber-500' : 'bg-gray-400'}`}>
+                                {prize.position || `${idx + 1}ère Place`}
+                              </span>
+                              <h4 className="text-4xl font-black text-[#3A3086] mb-1 tracking-tight">{prize.amount}</h4>
+                              <p className="text-gray-500 text-sm mb-4 font-medium">{prize.description || 'Récompense'}</p>
+                            </div>
+                          </div>
+                      )) : (
+                          <p>Aucun prix listé.</p>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Submit Area */}
+                  <section>
+                    <h3 className="text-2xl font-black text-[#3A3086] mb-4 flex items-center gap-2">
+                      <span className="w-2 h-8 bg-[#EF4444] rounded-full"></span>
+                      Soumettre votre travail
+                    </h3>
+                    <div 
+                        onClick={handleParticipate}
+                        className="border-2 border-dashed border-[#8D6E63]/30 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-white hover:bg-red-50/50 hover:border-[#EF4444] transition-all cursor-pointer group"
+                    >
+                      <div className="bg-[#EF4444]/10 p-5 rounded-full mb-4 group-hover:scale-110 group-hover:bg-[#EF4444]/20 transition-all duration-300">
+                        <span className="material-symbols-outlined text-4xl text-[#EF4444]">cloud_upload</span>
+                      </div>
+                      <h4 className="text-[#3A3086] font-bold text-xl mb-2">Glissez & déposez vos fichiers ici</h4>
+                      <p className="text-gray-500 text-sm max-w-sm mb-6">Formats supportés : JPG, PNG, PDF.</p>
+                      <button className="bg-[#3A3086] text-white px-8 py-3 rounded-full text-sm font-bold hover:bg-[#EF4444] transition-colors shadow-lg shadow-[#3A3086]/20">Parcourir les fichiers</button>
+                    </div>
+                  </section>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Message (Optionnel)</label>
-                <textarea 
-                  rows="3"
-                  placeholder="Dites-nous en plus sur votre projet..."
-                  className="w-full p-4 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={submission.message}
-                  onChange={e => setSubmission({...submission, message: e.target.value})}
-                ></textarea>
-              </div>
+              {/* Sidebar: Jury & Resources */}
+              <div className="lg:col-span-4 flex flex-col gap-6">
+                
+                {/* Jury Card */}
+                <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-[#3A3086] font-bold mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#EF4444]">gavel</span> Le Jury
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">Experts de l'industrie sélectionnés pour ce défi.</p>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-4 group">
+                      <div className="size-14 bg-gray-200 rounded-full overflow-hidden border-2 border-gray-100 group-hover:border-[#EF4444] transition-colors">
+                         <img src="https://i.pravatar.cc/150?u=a" alt="Jury" />
+                      </div>
+                      <div>
+                        <p className="text-[#3A3086] font-bold text-sm">Expert Invité</p>
+                        <p className="text-gray-500 text-xs">Lead Designer</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-              <div className="pt-2">
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {submitting ? <Loader2 className="animate-spin" /> : 'Envoyer ma participation'}
-                </button>
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-white border border-gray-200 text-gray-500 text-xs font-semibold rounded-full hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer">#{contest.type}</span>
+                  <span className="px-3 py-1 bg-white border border-gray-200 text-gray-500 text-xs font-semibold rounded-full hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer">#Challenge</span>
+                </div>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
-
+        </main>
+      </div>
     </div>
   );
-}
+};
 
+export {ContestDetailsPage};
 export default ContestDetailsPage;

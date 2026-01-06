@@ -1,38 +1,55 @@
-// src/api/auth.js
 import api from './axios';
 
 const authService = {
-  // Inscription
+  // --- Inscription ---
   async register(userData) {
     const response = await api.post('/register', userData);
-
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-
     return response.data;
   },
 
-  // Connexion
+  // --- Connexion ---
   async login(credentials) {
     const response = await api.post('/login', credentials);
-
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-
     return response.data;
   },
 
-  // Déconnexion (backend facultatif)
+  // --- NOUVEAU : Récupérer les infos fraîches du serveur ---
+  async getMe() {
+    // Cette route doit exister dans ton api.php (ex: Route::get('/me', ...))
+    const response = await api.get('/me');
+    return response.data;
+  },
+
+  // --- NOUVEAU : Mettre à jour le profil ---
+  async updateAccount(formData) {
+    // On utilise souvent POST même pour une mise à jour quand il y a une photo
+    // car PHP/Laravel gère mieux les fichiers en POST
+    const response = await api.post('/profile-update', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
+    
+    // Si l'user est mis à jour, on rafraîchit le localStorage
+    if (response.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  // --- Déconnexion ---
   async logout() {
     try {
-      // ⚠️ optionnel : seulement si la route existe côté backend
       await api.post('/logout');
     } catch (error) {
-      // Pas bloquant : on force le logout côté frontend
       console.warn('Logout API ignoré');
     } finally {
       localStorage.removeItem('token');
@@ -41,7 +58,7 @@ const authService = {
     }
   },
 
-  // Utilisateur courant
+  // --- Utilisateur local (synchrone) ---
   getCurrentUser() {
     try {
       const userStr = localStorage.getItem('user');

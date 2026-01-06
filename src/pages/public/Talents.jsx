@@ -1,400 +1,211 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Search, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, 
-  Eye, X, MapPin, Globe, Instagram, Linkedin, Twitter 
-} from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import ProfileService from '../../api/profiles';
+import { PageLoader } from '../../components/common/Loader';
 
-export function TalentPage() {
-  const [activeFilter, setActiveFilter] = useState('Tous');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProfile, setSelectedProfile] = useState(null); // Pour la modale
+const TalentsPage = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // États pour les données
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState('');
 
-  // Données enrichies pour la modale
-  const profiles = [
-    {
-      id: 1,
-      name: "Sarah Jenkins",
-      role: "CEO, TechForward",
-      category: "Entrepreneur",
-      location: "Paris, France",
-      desc: "Leader dans l'intégration de l'IA pour les PME. Sarah a transformé plus de 50 startups l'année dernière.",
-      fullBio: "Sarah Jenkins est une visionnaire de la tech avec 10 ans d'expérience. Elle aide les entreprises traditionnelles à franchir le cap du numérique grâce à des solutions IA sur mesure.",
-      stats: { views: "15k", followers: "8.2k", rating: "4.9" },
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
-      tagColor: "bg-[#2e3192]",
-      socials: { linkedin: "#", twitter: "#" }
-    },
-    {
-      id: 2,
-      name: "Elena Rodriguez",
-      role: "Artiste Visuelle",
-      category: "Artiste",
-      location: "Berlin, Allemagne",
-      desc: "Création d'installations immersives qui défient la perspective. Actuellement exposée à Paris et Berlin.",
-      fullBio: "Elena mélange sculpture classique et projection mapping. Ses œuvres interrogent notre rapport à l'espace et au temps dans l'ère numérique.",
-      stats: { views: "42k", followers: "120k", rating: "5.0" },
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800&q=80",
-      tagColor: "bg-[#ed1c24]",
-      socials: { instagram: "#", globe: "#" }
-    },
-    {
-      id: 3,
-      name: "GreenLoop",
-      role: "Logistique Durable",
-      category: "Startup",
-      location: "Lyon, France",
-      desc: "Révolutionner la livraison du dernier kilomètre avec des solutions écologiques. Gagnant du prix CleanTech 2023.",
-      fullBio: "GreenLoop utilise une flotte de vélos-cargos électriques et un algorithme d'optimisation propriétaire pour réduire l'empreinte carbone des livraisons urbaines de 60%.",
-      stats: { views: "8k", followers: "2.1k", rating: "4.8" },
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
-      tagColor: "bg-indigo-500",
-      socials: { linkedin: "#", globe: "#" }
-    },
-    {
-      id: 4,
-      name: "David Chen",
-      role: "Tech Reviewer",
-      category: "Influenceur",
-      location: "Londres, UK",
-      desc: "Tests honnêtes des derniers gadgets. Aide +500k abonnés à prendre de meilleures décisions d'achat.",
-      fullBio: "David est reconnu pour son objectivité et sa précision technique. Il collabore avec les plus grandes marques tout en gardant une liberté éditoriale totale.",
-      stats: { views: "1.2M", followers: "540k", rating: "4.7" },
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80",
-      tagColor: "bg-purple-500",
-      socials: { instagram: "#", twitter: "#", globe: "#" }
-    },
-    {
-      id: 5,
-      name: "Amara Ndiaye",
-      role: "UX/UI Designer",
-      category: "Freelance",
-      location: "Dakar, Sénégal",
-      desc: "Conception d'expériences numériques intuitives pour les applications fintech. Spécialisée en design systems.",
-      fullBio: "Amara combine esthétique moderne et ergonomie fonctionnelle. Elle a travaillé sur les applications bancaires les plus téléchargées d'Afrique de l'Ouest.",
-      stats: { views: "12k", followers: "5k", rating: "5.0" },
-      image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=800&q=80",
-      tagColor: "bg-teal-500",
-      socials: { linkedin: "#", globe: "#" }
-    },
-    {
-      id: 6,
-      name: "Global Tech Summit",
-      role: "Conférence",
-      category: "Événement",
-      location: "Abidjan, Côte d'Ivoire",
-      desc: "Le plus grand rassemblement d'innovateurs tech en Afrique de l'Ouest. Rejoignez-nous pour le réseautage.",
-      fullBio: "3 jours de conférences, 50 speakers internationaux et un espace d'exposition pour 200 startups. L'événement incontournable de l'année.",
-      stats: { views: "85k", followers: "15k", rating: "4.9" },
-      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
-      tagColor: "bg-orange-500",
-      socials: { linkedin: "#", twitter: "#", globe: "#" }
-    }
-  ];
+  // Image par défaut stylée (si pas d'image en BDD)
+  const fallbackImage = "https://images.unsplash.com/photo-1531384441138-2736e62e0919?q=80&w=1000&auto=format&fit=crop";
 
-  const filters = ["Tous", "Entrepreneur", "Artiste", "Startup", "Influenceur", "Freelance", "Événement"];
-
-  // Logique de filtrage
-  const filteredProfiles = profiles.filter(profile => {
-    const matchCategory = activeFilter === 'Tous' || profile.category === activeFilter;
-    const matchSearch = profile.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        profile.role.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCategory && matchSearch;
-  });
-
-  // Gestion de la modale
-  const openDetails = (profile) => setSelectedProfile(profile);
-  const closeDetails = () => setSelectedProfile(null);
-
-  // Empêcher le scroll quand la modale est ouverte
+  // Gestion du mode sombre
   useEffect(() => {
-    if (selectedProfile) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setIsDarkMode(true);
     }
-  }, [selectedProfile]);
+  }, []);
+
+  // --- LOGIQUE DE CHARGEMENT (Inchangée) ---
+  const fetchProfiles = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { 
+          status: 'active',
+          ...(filterType && { type: filterType }) 
+      };
+
+      const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
+      const apiRequest = ProfileService.getAll(params);
+
+      const [_, response] = await Promise.all([minDelay, apiRequest]);
+
+      let dataToSet = [];
+      if (response.data && Array.isArray(response.data.data)) {
+          dataToSet = response.data.data;
+      } else if (response.data && Array.isArray(response.data)) {
+          dataToSet = response.data;
+      } else if (Array.isArray(response.data)) {
+          dataToSet = response.data;
+      } else {
+          dataToSet = [];
+      }
+      setProfiles(dataToSet);
+
+    } catch (error) {
+      console.error("❌ Erreur chargement profils:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterType]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
+
+  // Fond général de la page
+  const patternStyle = {
+    backgroundColor: '#F9FAFB',
+    backgroundImage: `radial-gradient(#3A3086 0.8px, transparent 0.8px), radial-gradient(#3A3086 0.8px, #F9FAFB 0.8px)`,
+    backgroundSize: '24px 24px',
+    opacity: 0.05
+  };
 
   return (
-    <div className="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 min-h-screen font-sans">
-      
+    <div className={`${isDarkMode ? 'dark' : ''} font-['Plus_Jakarta_Sans',sans-serif]`}>
+      {/* Scrollbar Custom */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        .font-display { font-family: 'Oswald', sans-serif; }
-        .font-body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #333399; border-radius: 5px; }
       `}</style>
 
-      {/* Décoration Blob */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute bg-[#2e3192] w-96 h-96 top-0 left-0 -translate-x-1/2 -translate-y-1/2 blur-[100px] opacity-15 rounded-full"></div>
-        <div className="absolute bg-[#ed1c24] w-80 h-80 bottom-0 right-0 translate-x-1/3 translate-y-1/3 blur-[100px] opacity-15 rounded-full"></div>
-      </div>
+      {loading && <PageLoader />}
 
-      <main className="relative z-10 font-body">
-
-        {/* --- 1. HERO HEADER --- */}
-        <header className="relative pt-12 pb-16 lg:pt-20 lg:pb-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              
-              {/* Texte */}
-              <div className="space-y-8 order-2 lg:order-1">
-                <div className="inline-block">
-                  <span className="bg-[#ed1c24] text-white px-3 py-1 rounded text-sm font-bold uppercase tracking-wider mb-2 inline-block">
-                    Visibilité à la une
-                  </span>
-                </div>
-                
-                <div className="bg-[#2e3192] p-8 md:p-10 shadow-2xl relative overflow-hidden rounded-lg transform -rotate-1 hover:rotate-0 transition duration-500">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#ed1c24] opacity-20 rounded-full blur-2xl transform translate-x-10 -translate-y-10"></div>
-                  <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl text-white leading-none uppercase">
-                    Ensemble<br/>
-                    Faisons<br/>
-                    Briller<br/>
-                    <span className="text-[#ed1c24]">Level</span>
-                  </h1>
-                  <p className="mt-4 text-indigo-100 text-lg md:text-xl font-medium">
-                    Toutes les clés sont ici.
-                  </p>
-                </div>
-
-                <p className="text-lg text-slate-600 dark:text-slate-300 max-w-lg">
-                   Découvrez les artistes, entrepreneurs et visionnaires qui élèvent leur marque avec Level Boost. Connectez-vous avec ceux qui font bouger les lignes.
-                </p>
-
-                <div className="flex flex-wrap gap-4">
-                  <button className="bg-[#2e3192] hover:bg-indigo-800 text-white px-8 py-3 rounded font-display font-bold text-lg uppercase tracking-wide shadow-lg shadow-indigo-500/30 transition">
-                    Explorer les Profils
-                  </button>
-                  <button className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-8 py-3 rounded font-display font-bold text-lg uppercase tracking-wide hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-                    Comment ça marche
-                  </button>
-                </div>
-              </div>
-
-              {/* Image Hero */}
-              <div className="order-1 lg:order-2 relative group">
-                 <div className="absolute inset-0 bg-gradient-to-tr from-[#2e3192] to-[#ed1c24] rounded-2xl transform rotate-3 scale-105 opacity-20 group-hover:rotate-6 transition duration-500"></div>
-                 <img 
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80" 
-                    alt="Talent vedette" 
-                    className="relative rounded-2xl shadow-2xl w-full object-cover h-[500px] lg:h-[600px] grayscale-0 hover:grayscale transition duration-500 border-4 border-white dark:border-slate-800"
-                 />
-                 
-                 <div className="absolute bottom-8 left-0 lg:-left-5 bg-white dark:bg-[#1e293b] p-4 rounded-lg shadow-xl border-l-4 border-[#ed1c24] flex items-center gap-3">
-                    <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full text-[#2e3192] dark:text-blue-300">
-                       <TrendingUp className="w-6 h-6" />
-                    </div>
-                    <div>
-                       <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Vues hebdo</p>
-                       <p className="text-xl font-display font-bold text-slate-900 dark:text-white">+12.5k</p>
-                    </div>
-                 </div>
-              </div>
-
+      <div className="bg-[#F9FAFB] dark:bg-[#111827] text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen">
+        
+        {/* Header (Simplifié pour laisser la place aux cartes) */}
+        <header className="relative overflow-hidden py-20 lg:py-28">
+          <div className="absolute inset-0 pointer-events-none" style={patternStyle}></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#EF4444]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#3A3086]/10 dark:bg-[#3A3086]/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h2 className="text-[#EF4444] font-bold tracking-wider uppercase text-sm mb-4">Excellence Communautaire</h2>
+            <h1 className="text-5xl md:text-7xl font-['Syne',sans-serif] font-extrabold text-[#3A3086] dark:text-white mb-6 leading-tight">
+                Talents <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF4444] to-orange-500">Émergents</span> <br/>
+                & Réussites
+            </h1>
+            <p className="max-w-2xl mx-auto text-xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed">
+                Découvrez les entrepreneurs, artistes et innovateurs qui ont élevé leur niveau avec Level Boost.
+            </p>
+            
+            {/* Filtres */}
+            <div className="flex flex-wrap justify-center gap-3">
+              <button onClick={() => setFilterType('')} className={`px-6 py-2 rounded-full font-medium shadow-md transition transform hover:-translate-y-0.5 ${filterType === '' ? 'bg-[#3A3086] text-white' : 'bg-white text-gray-600 hover:text-[#EF4444]'}`}>Tous</button>
+              <button onClick={() => setFilterType('entrepreneur')} className={`px-6 py-2 rounded-full font-medium shadow-md transition transform hover:-translate-y-0.5 ${filterType === 'entrepreneur' ? 'bg-[#3A3086] text-white' : 'bg-white text-gray-600 hover:text-[#EF4444]'}`}>Entrepreneurs</button>
+              <button onClick={() => setFilterType('artist')} className={`px-6 py-2 rounded-full font-medium shadow-md transition transform hover:-translate-y-0.5 ${filterType === 'artist' ? 'bg-[#3A3086] text-white' : 'bg-white text-gray-600 hover:text-[#EF4444]'}`}>Créatifs</button>
+              <button onClick={() => setFilterType('startup')} className={`px-6 py-2 rounded-full font-medium shadow-md transition transform hover:-translate-y-0.5 ${filterType === 'startup' ? 'bg-[#3A3086] text-white' : 'bg-white text-gray-600 hover:text-[#EF4444]'}`}>Tech</button>
             </div>
           </div>
         </header>
 
-        {/* --- 2. BARRE DE RECHERCHE & FILTRES --- */}
-        <section className="py-8 border-y border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
-           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                 
-                 {/* Filtres */}
-                 <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 w-full md:w-auto no-scrollbar">
-                    {filters.map((filter, i) => (
-                      <button 
-                        key={i}
-                        onClick={() => setActiveFilter(filter)}
-                        className={`px-6 py-2 rounded-full text-sm font-bold whitespace-nowrap transition border ${
-                            activeFilter === filter 
-                            ? 'bg-[#2e3192] text-white border-[#2e3192] shadow-md' 
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
-                        }`}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                 </div>
-
-                 {/* Recherche */}
-                 <div className="relative w-full md:w-72">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                       <Search className="w-5 h-5 text-slate-400" />
-                    </div>
-                    <input 
-                      type="text" 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-full leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#2e3192] focus:border-[#2e3192] sm:text-sm" 
-                      placeholder="Rechercher un profil..." 
-                    />
-                 </div>
-              </div>
-           </div>
-        </section>
-
-        {/* --- 3. GRILLE DES PROFILS --- */}
-        <section className="py-16 min-h-[600px]">
-           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-10 border-l-8 border-[#ed1c24] pl-4">
-                 {activeFilter === 'Tous' ? 'Boostés Récemment' : `${activeFilter}s`}
-              </h2>
-
-              {filteredProfiles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                   {filteredProfiles.map((profile) => (
-                      <div key={profile.id} className="bg-white dark:bg-[#1e293b] rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition duration-300 overflow-hidden group border border-slate-100 dark:border-slate-800">
-                          {/* Image Carte */}
-                          <div className="relative h-64 overflow-hidden">
-                             <div className={`absolute top-4 left-4 z-10 ${profile.tagColor} text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider`}>
-                                {profile.category}
-                             </div>
-                             <img 
-                                src={profile.image} 
-                                alt={profile.name} 
-                                className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
-                             />
-                          </div>
-
-                          {/* Contenu Carte */}
-                          <div className="p-6">
-                             <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-1">{profile.name}</h3>
-                             <p className="text-[#ed1c24] text-sm font-medium mb-3">{profile.role}</p>
-                             <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 line-clamp-3">
-                                {profile.desc}
-                             </p>
-                             <button 
-                                onClick={() => openDetails(profile)}
-                                className="w-full py-2 border-2 border-[#2e3192] text-[#2e3192] dark:text-indigo-400 dark:border-indigo-400 font-bold rounded hover:bg-[#2e3192] hover:text-white dark:hover:bg-indigo-400 dark:hover:text-slate-900 transition flex items-center justify-center gap-2"
-                             >
-                                 Voir Détails <Eye className="w-4 h-4" />
-                             </button>
-                          </div>
-                      </div>
-                   ))}
-                </div>
-              ) : (
-                <div className="text-center py-20">
-                    <p className="text-slate-500 text-xl">Aucun profil ne correspond à votre recherche.</p>
-                    <button onClick={() => {setActiveFilter('Tous'); setSearchQuery('')}} className="mt-4 text-[#2e3192] font-bold underline">Réinitialiser les filtres</button>
-                </div>
-              )}
-
-              {/* Pagination (Visuelle) */}
-              <div className="mt-16 flex justify-center">
-                 <nav className="flex gap-2">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition">
-                       <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#2e3192] text-white font-bold shadow-lg shadow-indigo-500/30">1</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition">2</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition">
-                       <ChevronRight className="w-5 h-5" />
-                    </button>
-                 </nav>
-              </div>
-
-           </div>
-        </section>
-
-        {/* --- 4. CTA BAS DE PAGE --- */}
-        <section className="py-20 bg-[#2e3192] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#ed1c24] rounded-full blur-[100px] opacity-40"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full blur-[100px] opacity-10"></div>
+        {/* --- GRID DES CARTES "POSTER" --- */}
+        <section className="pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
-            <div className="max-w-4xl mx-auto text-center px-4 relative z-10">
-                <h2 className="font-display font-bold text-4xl md:text-5xl text-white mb-6 uppercase">Prêt à briller ?</h2>
-                <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
-                    Rejoignez des centaines de professionnels qui boostent leur visibilité aujourd'hui. "Ensemble, faisons briller Level."
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button className="bg-[#ed1c24] hover:bg-red-600 text-white px-8 py-4 rounded font-display font-bold text-lg uppercase tracking-wide shadow-xl transition transform hover:scale-105">
-                        Booster mon Profil
-                    </button>
-                    <button className="bg-transparent border-2 border-white text-white px-8 py-4 rounded font-display font-bold text-lg uppercase tracking-wide hover:bg-white hover:text-[#2e3192] transition">
-                        Contacter l'équipe
-                    </button>
+            {profiles.length > 0 ? profiles.map((profile) => {
+                // Choix image : Cover > Logo > Fallback
+                const bgImage = profile.cover_image || profile.logo || fallbackImage;
+
+                return (
+                    <Link 
+                        to={`/talents/${profile.slug}`} 
+                        key={profile.id} 
+                        className="group relative h-[500px] rounded-[2rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-[#3A3086]"
+                    >
+                        {/* 1. FOND ET DÉCORATION */}
+                        {/* Cercle rouge flou en bas à droite */}
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#EF4444] rounded-full blur-[60px] opacity-60 z-0 pointer-events-none group-hover:opacity-80 transition-opacity"></div>
+                        {/* Cercle blanc flou en haut à gauche */}
+                        <div className="absolute -top-10 -left-10 w-32 h-32 bg-white rounded-full blur-[50px] opacity-20 z-0 pointer-events-none"></div>
+
+                        {/* 2. IMAGE DU TALENT (Moitié supérieure ou fondue) */}
+                        <div className="absolute top-0 left-0 w-full h-[60%] z-0">
+                            <img 
+                                src={bgImage} 
+                                alt={profile.title} 
+                                className="w-full h-full object-cover object-top opacity-90 transition-transform duration-700 group-hover:scale-105" 
+                            />
+                            {/* Gradient agressif pour fondre l'image dans le bleu du bas */}
+                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#3A3086]/50 to-[#3A3086]"></div>
+                        </div>
+
+                        {/* 3. CONTENU TEXTE (Style Poster) */}
+                        <div className="absolute inset-0 flex flex-col justify-end p-8 z-10">
+                            
+                            {/* Logo "Le Level" en petit */}
+                            <div className="absolute top-6 right-6 opacity-80">
+                                <span className="text-white font-['Syne'] font-bold text-xs tracking-widest">LEVEL<span className="text-[#EF4444]">BOOST</span></span>
+                            </div>
+
+                            {/* Catégorie badge */}
+                            <div className="mb-3">
+                                <span className="bg-[#EF4444] text-white text-[10px] font-bold px-3 py-1 rounded-sm uppercase tracking-widest">
+                                    {profile.category || profile.type}
+                                </span>
+                            </div>
+
+                            {/* TITRE TYPOGRAPHIQUE */}
+                            <div className="font-['Syne'] text-white uppercase leading-[0.9] mb-4 drop-shadow-lg">
+                                <span className="block text-xl font-bold opacity-80">Ensemble</span>
+                                <span className="block text-xl font-bold opacity-80">Faisons</span>
+                                <span className="block text-xl font-bold text-[#EF4444]">Briller</span>
+                                {/* Nom du talent en très gros */}
+                                <span className="block text-3xl md:text-4xl font-black mt-1 line-clamp-2">
+                                    {profile.title}
+                                </span>
+                            </div>
+
+                            {/* Tagline */}
+                            <div className="flex items-center justify-between border-t border-white/20 pt-4 mt-2">
+                                <p className="text-gray-300 text-xs italic">
+                                    "Toutes les clés sont ici"
+                                </p>
+                                {/* Flèche d'action */}
+                                <div className="w-8 h-8 rounded-full bg-white text-[#3A3086] flex items-center justify-center group-hover:bg-[#EF4444] group-hover:text-white transition-colors">
+                                    <span className="material-icons text-sm">arrow_forward</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                );
+            }) : (
+                <div className="col-span-full py-20 text-center">
+                    <span className="material-icons text-6xl text-gray-300 mb-4">person_off</span>
+                    <p className="text-gray-500 font-medium">Aucun talent trouvé pour cette catégorie.</p>
                 </div>
+            )}
+
+            {/* CTA Card (Style Poster aussi pour la cohérence) */}
+            <div className="group relative h-[500px] rounded-[2rem] overflow-hidden shadow-xl bg-white border-2 border-[#3A3086] border-dashed flex flex-col items-center justify-center text-center p-8">
+                <div className="w-20 h-20 bg-[#3A3086]/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-[#3A3086] group-hover:text-white transition-all duration-300 text-[#3A3086]">
+                  <span className="material-icons text-4xl">add</span>
+                </div>
+                <h3 className="text-3xl font-['Syne'] font-black text-[#3A3086] uppercase mb-2 leading-tight">
+                    Vous êtes<br/>le prochain ?
+                </h3>
+                <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto">
+                    Rejoignez le réseau Level Boost et obtenez votre propre mise en avant.
+                </p>
+                <button className="bg-[#EF4444] hover:bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg transition transform group-hover:scale-105">
+                   Candidater
+                </button>
             </div>
+
+          </div>
         </section>
 
-        {/* --- 5. MODALE DÉTAILS --- */}
-        {selectedProfile && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-white dark:bg-[#1e293b] w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row animate-in zoom-in-95 duration-200">
-                    
-                    {/* Bouton Fermer */}
-                    <button 
-                        onClick={closeDetails}
-                        className="absolute top-4 right-4 z-20 bg-white/20 hover:bg-white/40 p-2 rounded-full text-white md:text-slate-500 md:hover:bg-slate-100 transition"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-
-                    {/* Image Modale */}
-                    <div className="w-full md:w-2/5 h-64 md:h-auto relative">
-                        <img 
-                            src={selectedProfile.image} 
-                            alt={selectedProfile.name} 
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden"></div>
-                        <div className={`absolute top-4 left-4 ${selectedProfile.tagColor} text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider`}>
-                            {selectedProfile.category}
-                        </div>
-                    </div>
-
-                    {/* Contenu Modale */}
-                    <div className="w-full md:w-3/5 p-8 max-h-[80vh] overflow-y-auto">
-                        <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-1">{selectedProfile.name}</h2>
-                        <p className="text-[#ed1c24] text-lg font-medium mb-4">{selectedProfile.role}</p>
-                        
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mb-6">
-                            <MapPin className="w-4 h-4" /> {selectedProfile.location}
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4 mb-8">
-                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg text-center">
-                                <div className="text-xl font-bold text-[#2e3192] dark:text-white">{selectedProfile.stats.views}</div>
-                                <div className="text-xs uppercase text-slate-500 font-bold">Vues</div>
-                            </div>
-                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg text-center">
-                                <div className="text-xl font-bold text-[#2e3192] dark:text-white">{selectedProfile.stats.followers}</div>
-                                <div className="text-xs uppercase text-slate-500 font-bold">Abonnés</div>
-                            </div>
-                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg text-center">
-                                <div className="text-xl font-bold text-[#2e3192] dark:text-white">{selectedProfile.stats.rating}</div>
-                                <div className="text-xs uppercase text-slate-500 font-bold">Note</div>
-                            </div>
-                        </div>
-
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">À Propos</h3>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
-                            {selectedProfile.fullBio}
-                        </p>
-
-                        <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-700 pt-6">
-                            <div className="flex gap-4">
-                                {selectedProfile.socials.linkedin && <Linkedin className="w-5 h-5 text-slate-400 hover:text-[#2e3192] cursor-pointer transition"/>}
-                                {selectedProfile.socials.twitter && <Twitter className="w-5 h-5 text-slate-400 hover:text-[#2e3192] cursor-pointer transition"/>}
-                                {selectedProfile.socials.instagram && <Instagram className="w-5 h-5 text-slate-400 hover:text-[#2e3192] cursor-pointer transition"/>}
-                                {selectedProfile.socials.globe && <Globe className="w-5 h-5 text-slate-400 hover:text-[#2e3192] cursor-pointer transition"/>}
-                            </div>
-                            <button className="bg-[#2e3192] hover:bg-indigo-800 text-white px-6 py-2 rounded font-bold shadow-lg transition">
-                                Contacter
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )}
-
-      </main>
+      </div>
     </div>
   );
-}
+};
 
-export default TalentPage;
+export { TalentsPage };
+export default TalentsPage;

@@ -1,177 +1,181 @@
-// Navbar.jsx
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  Menu, X, Grid, Settings, LogOut, User
-} from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
-export const Navbar = ({ currentPage, user, onLogout }) => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const navigate = useNavigate();
+const Navbar = ({ toggleDarkMode }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
 
+  // Gestion du fond au scroll
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navItems = [
-    { path: '/', label: 'Accueil' },
-    { path: '/services', label: 'Services' },
-     { path: '/about', label: 'A Propos' },
-    { path: '/talents', label: 'Talents' },
-    { path: '/contests', label: 'Concours' },
-    { path: '/pricing', label: 'Tarifs' },
-  ];
-
-  const isTransparent = !scrolled && currentPage === '/';
+  // Fonction utilitaire pour savoir si un lien est actif
+  const isActive = (path) => {
+    return location.pathname === path 
+      ? "text-[#EF4444]" // Active color (Primary Red)
+      : "text-gray-600 dark:text-gray-300 hover:text-[#3A3086] dark:hover:text-white";
+  };
 
   return (
-    <nav className={`fixed w-full z-40 transition-all duration-300 ${isTransparent ? 'bg-transparent' : 'bg-white shadow-md'}`}>
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm" 
+        : "bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800"
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-20 items-center">
+          
+          {/* LOGO */}
+          <div className="flex-shrink-0 flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-[#3A3086] rounded-full flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[#EF4444] w-1/2 h-full rounded-l-full transform -skew-x-12 translate-x-1"></div>
+                <span className="relative text-white font-['Syne',sans-serif] font-bold text-xl">LB</span>
+              </div>
+              <span className="font-['Syne',sans-serif] font-bold text-2xl text-[#3A3086] dark:text-white">
+                Level<span className="text-[#EF4444]">Boost</span>
+              </span>
+            </Link>
+          </div>
+          
+          {/* DESKTOP MENU */}
+          <div className="hidden md:flex space-x-8 items-center">
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
-              LB
-            </div>
-            <span className={`text-xl font-bold hidden sm:block ${isTransparent ? 'text-white' : 'text-slate-900'}`}>
-              Level Boost
-            </span>
-          </Link>
+             <Link 
+              to="/" 
+              className={`${isActive('/')} font-medium transition`}
+            >
+              Accueil
+            </Link>
+             <Link 
+              to="/about" 
+              className={`${isActive('/about')} font-medium transition`}
+            >
+              A Propos
+            </Link>
+            <Link 
+              to="/services" 
+              className={`${isActive('/services')} font-medium transition`}
+            >
+              Services
+            </Link>
+            
+           
+            
+            {/* Vitrine correspond à la page Talents */}
+            <Link 
+              to="/talents" 
+              className={`${isActive('/talents')} font-medium transition`}
+            >
+              Vitrine
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            {navItems.map(item => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`font-medium transition ${
-                  currentPage === item.path
-                    ? 'text-indigo-600'
-                    : isTransparent
-                    ? 'text-white hover:text-indigo-300'
-                    : 'text-slate-600 hover:text-indigo-600'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {/* J'ai ajouté Concours ici car c'est une route importante, ou tu peux mettre Pricing */}
+            <Link 
+              to="/contests" 
+              className={`${isActive('/contests')} font-medium transition`}
+            >
+              Concours
+            </Link>
 
-            {user ? (
-              <>
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className={`flex items-center font-medium ${isTransparent ? 'text-white' : 'text-slate-600'} hover:text-indigo-600`}
-                >
-                  <Grid className="w-4 h-4 mr-1" /> Dashboard
-                </button>
+            <Link 
+              to="/pricing" 
+              className={`${isActive('/pricing')} font-medium transition`}
+            >
+              Tarifs
+            </Link>
 
-                {/* Dropdown utilisateur */}
-                <div className="relative group">
-                  <button className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isTransparent ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>
-                    <User className="w-4 h-4" />
-                    <span className="text-sm font-medium">{user.name}</span>
-                  </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <button
-                      onClick={() => navigate('/dashboard/settings')}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center text-slate-700 rounded-t-lg"
-                    >
-                      <Settings className="w-4 h-4 mr-2" /> Paramètres
-                    </button>
-                    <button
-                      onClick={() => { onLogout(); navigate('/'); }}
-                      className="w-full text-left px-4 py-3 hover:bg-red-50 flex items-center text-red-600 rounded-b-lg"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" /> Déconnexion
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className={`font-medium ${isTransparent ? 'text-white' : 'text-slate-600'} hover:text-indigo-600`}
-                >
-                  Connexion
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
-                >
-                  S'inscrire
-                </Link>
-              </>
-            )}
+            {/* CTA BUTTON -> Login */}
+            <Link to="/leads">
+              <button className="bg-[#3A3086] hover:bg-opacity-90 text-white px-5 py-2.5 rounded-full font-semibold transition shadow-lg shadow-[#3A3086]/30">
+                Se Booster
+              </button>
+            </Link>
+
+            {/* DARK MODE TOGGLE */}
+            {/* Assure-toi de passer la fonction toggleDarkMode depuis ton layout ou contexte */}
+            <button 
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition" 
+              onClick={() => {
+                document.documentElement.classList.toggle('dark');
+                if(toggleDarkMode) toggleDarkMode();
+              }}
+            >
+              <span className="material-icons text-gray-500 dark:text-gray-400">brightness_6</span>
+            </button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden">
-            {mobileOpen ? (
-              <X className={isTransparent ? 'text-white' : 'text-slate-900'} />
-            ) : (
-              <Menu className={isTransparent ? 'text-white' : 'text-slate-900'} />
-            )}
-          </button>
+          {/* MOBILE MENU BUTTON */}
+          <div className="md:hidden flex items-center">
+            <button 
+              className="text-gray-600 dark:text-gray-300"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <span className="material-icons text-3xl">
+                {isMobileMenuOpen ? 'close' : 'menu'}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="md:hidden bg-white border-t overflow-hidden"
-          >
-            <div className="px-4 py-4 space-y-2">
-              {navItems.map(item => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={`block w-full px-3 py-2 rounded-lg ${
-                    currentPage === item.path
-                      ? 'bg-indigo-50 text-indigo-600 font-medium'
-                      : 'hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              {user ? (
-                <>
-                  <Link to="/dashboard" className="block w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700" onClick={() => setMobileOpen(false)}>
-                    <Grid className="w-4 h-4 inline mr-2" /> Dashboard
-                  </Link>
-                  <Link to="/dashboard/settings" className="block w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700" onClick={() => setMobileOpen(false)}>
-                    <Settings className="w-4 h-4 inline mr-2" /> Paramètres
-                  </Link>
-                  <button onClick={() => { onLogout(); navigate('/'); setMobileOpen(false); }} className="block w-full px-3 py-2 text-red-600 rounded-lg hover:bg-red-50">
-                    <LogOut className="w-4 h-4 inline mr-2" /> Déconnexion
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="block w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700" onClick={() => setMobileOpen(false)}>
-                    Connexion
-                  </Link>
-                  <Link to="/register" className="block w-full bg-indigo-600 text-white px-3 py-2 rounded-lg font-medium" onClick={() => setMobileOpen(false)}>
-                    S'inscrire
-                  </Link>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* MOBILE DROPDOWN */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 py-4 space-y-4 shadow-lg absolute w-full left-0">
+           <Link 
+             to="/services" 
+             className="block text-gray-600 dark:text-gray-300 hover:text-[#3A3086]"
+             onClick={() => setIsMobileMenuOpen(false)}
+           >
+             Services
+           </Link>
+           <Link 
+             to="/about" 
+             className="block text-gray-600 dark:text-gray-300 hover:text-[#3A3086]"
+             onClick={() => setIsMobileMenuOpen(false)}
+           >
+             Agence
+           </Link>
+           <Link 
+             to="/talents" 
+             className="block text-[#3A3086] font-bold"
+             onClick={() => setIsMobileMenuOpen(false)}
+           >
+             Vitrine
+           </Link>
+           <Link 
+             to="/contests" 
+             className="block text-gray-600 dark:text-gray-300 hover:text-[#3A3086]"
+             onClick={() => setIsMobileMenuOpen(false)}
+           >
+             Concours
+           </Link>
+           <Link 
+             to="/pricing" 
+             className="block text-gray-600 dark:text-gray-300 hover:text-[#3A3086]"
+             onClick={() => setIsMobileMenuOpen(false)}
+           >
+             Tarifs
+           </Link>
+           
+           <Link 
+             to="/leads"
+             onClick={() => setIsMobileMenuOpen(false)}
+           >
+             <button className="w-full bg-[#3A3086] text-white px-5 py-2.5 rounded-full font-semibold mt-2">
+                Se Booster
+             </button>
+           </Link>
+        </div>
+      )}
     </nav>
   );
 };
+export {Navbar};
+export default Navbar;

@@ -1,122 +1,72 @@
-import api from './axios';
+// src/api/profiles.js
+import api from './axios'; // Assurez-vous que ce chemin pointe bien vers votre fichier de config axios
 
-const profileService = {
-  // Récupérer tous les profils
-  async getAllProfiles(params = {}) {
+const ProfileService = {
+  /**
+   * Récupère la liste des profils (Talents)
+   * @param {Object} params - Filtres optionnels (ex: { type: 'artist', page: 1 })
+   * Route Laravel: GET /profiles
+   */
+  getAll: async (params = {}) => {
     try {
       const response = await api.get('/profiles', { params });
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      throw error;
     }
   },
 
-  // Récupérer un profil par son ID ou son slug
-  async getProfileById(idOrSlug) {
+  /**
+   * Récupère les détails d'un profil spécifique via son slug
+   * @param {string} slug - Le slug unique du profil
+   * Route Laravel: GET /profiles/{slug}
+   */
+  getBySlug: async (slug) => {
     try {
-      const response = await api.get(`/profiles/${idOrSlug}`);
+      const response = await api.get(`/profiles/${slug}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      throw error;
     }
   },
 
-  // Créer un nouveau profil
-  async createProfile(profileData) {
+  /**
+   * Créer un nouveau profil (Pour le Dashboard Client plus tard)
+   * Gère l'envoi de fichiers (logo, cover)
+   * Route Laravel: POST /profiles
+   */
+  create: async (formData) => {
     try {
-      const response = await api.post('/profiles', profileData, {
+      const response = await api.post('/profiles', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      throw error;
     }
   },
 
-  // Mettre à jour un profil
-  async updateProfile(id, profileData) {
+  /**
+   * Mettre à jour un profil (Pour le Dashboard Client plus tard)
+   * Route Laravel: PUT /profiles/{profile}
+   * Note: Avec Laravel et FormData, on utilise souvent POST avec _method="PUT"
+   */
+  update: async (id, formData) => {
     try {
-      const response = await api.post(`/profiles/${id}`, profileData, {
+      // Astuce Laravel pour l'upload de fichiers en modification
+      formData.append('_method', 'PUT'); 
+      const response = await api.post(`/profiles/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      throw error;
     }
-  },
-
-  // Supprimer un profil
-  async deleteProfile(id) {
-    try {
-      const response = await api.delete(`/profiles/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // Rechercher des profils
-  async searchProfiles(query, filters = {}) {
-    try {
-      const response = await api.get('/profiles/search', {
-        params: {
-          q: query,
-          ...filters,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // Suivre un artiste
-  async followArtist(artistId) {
-    try {
-      const response = await api.post(`/profiles/${artistId}/follow`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // Ne plus suivre un artiste
-  async unfollowArtist(artistId) {
-    try {
-      const response = await api.post(`/profiles/${artistId}/unfollow`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // Récupérer les profils populaires
-  async getPopularProfiles(limit = 10) {
-    try {
-      const response = await api.get('/profiles/popular', {
-        params: { limit },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // Récupérer les profils récemment ajoutés
-  async getRecentProfiles(limit = 10) {
-    try {
-      const response = await api.get('/profiles/recent', {
-        params: { limit },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
+  }
 };
 
-export default profileService;
+export default ProfileService;
